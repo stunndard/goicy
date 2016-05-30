@@ -1,0 +1,2 @@
+/home/goicy/tracks/track1.aac
+/home/goicy/tracks/track2.aac
