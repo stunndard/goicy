@@ -8,30 +8,7 @@ import (
 	"strconv"
 )
 
-type Error interface {
-	error
-	BadFile() bool // Is that the AAC file error?
-}
-
-type FileError struct {
-	Err error
-	msg string
-}
-
-func (e *FileError) Error() string {
-	return e.msg
-}
-
-func (e *FileError) BadFile() bool {
-	return true
-}
-
 func isValidFrameHeader(header []byte) (int, bool) {
-	var (
-		syncword     uint16
-		frame_length int
-	)
-
 	sftable := [...]int{
 		96000, 88200, 64000, 48000,
 		44100, 32000, 24000, 22050,
@@ -39,7 +16,7 @@ func isValidFrameHeader(header []byte) (int, bool) {
 		7350, 0, 0, 0}
 
 	// check for valid syncowrd
-	syncword = (uint16(header[0]) << 4) | (uint16(header[1]) >> 4)
+	syncword := (uint16(header[0]) << 4) | (uint16(header[1]) >> 4)
 	if syncword != 0x0FFF {
 		return 0, false
 	}
@@ -56,7 +33,13 @@ func isValidFrameHeader(header []byte) (int, bool) {
 		return 0, false
 	}
 
-	frame_length = ((int(header[3]) & 0x03) << 11) | (int(header[4]) << 3) | ((int(header[5]) & 0x0E0) >> 5)
+	// get and check "channel configuration"
+	ch := int(((header[2] & 0x01) << 2) | ((header[3] & 0x0C0) >> 6))
+	if (ch < 1) || (ch > 7) {
+		return 0, false
+	}
+
+	frame_length := ((int(header[3]) & 0x03) << 11) | (int(header[4]) << 3) | ((int(header[5]) & 0x0E0) >> 5)
 	if (frame_length < 7) || (frame_length > 5000) {
 		return 0, false
 	}
@@ -70,11 +53,9 @@ func SeekTo1StFrame(f os.File) int {
 		buf        []byte
 		aac_header []byte
 		j          int64
-		n          int
-		ok         bool
 	)
 
-	buf = make([]byte, 50000)
+	buf = make([]byte, 5000)
 	f.ReadAt(buf, 0)
 
 	j = -1
@@ -85,14 +66,19 @@ func SeekTo1StFrame(f os.File) int {
 			}
 			aac_header = buf[i : i+7]
 
-			if n, ok = isValidFrameHeader(aac_header); ok {
-
+			if n, ok := isValidFrameHeader(aac_header); ok {
 				if i+n+7 >= len(buf) {
 					break
 				}
 				aac_header = buf[i+n : i+n+7]
-				if _, ok = isValidFrameHeader(aac_header); !ok {
-					continue
+				if m, ok := isValidFrameHeader(aac_header); ok {
+					if i+n+m+7 >= len(buf) {
+						break
+					}
+					aac_header = buf[i+n+m : i+n+m+7]
+					if _, ok := isValidFrameHeader(aac_header); !ok {
+						continue
+					}
 				}
 
 				j = int64(i)
@@ -244,16 +230,16 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 		7350, 0, 0, 0}
 
 	if !util.FileExists(filename) {
-		err := new(FileError)
-		err.msg = "File doesn't exist"
+		err := new(util.FileError)
+		err.Msg = "File doesn't exist"
 		return err
 	}
 
 	// open file
 	f, err := os.Open(filename)
 	if err != nil {
-		err := new(FileError)
-		err.msg = "Cannot open file"
+		err := new(util.FileError)
+		err.Msg = "Cannot open file"
 		return err
 	}
 
@@ -261,8 +247,8 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 
 	j := SeekTo1StFrame(*f)
 	if j == -1 {
-		err := new(FileError)
-		err.msg = "Couldn't find AAC frame"
+		err := new(util.FileError)
+		err.Msg = "Couldn't find AAC frame"
 		return err
 	}
 
@@ -278,29 +264,34 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	if n, err := f.Read(fixheader); (n == len(fixheader)) && (err == nil) {
 		// check the 'syncword'
 		if (fixheader[0] != 0x0FF) && ((fixheader[1] & 0x0F0) != 0x0F0) {
-			err := new(FileError)
-			err.msg = "Bad \"syncword\" at frame # " + strconv.Itoa(frame)
+			err := new(util.FileError)
+			err.Msg = "Bad \"syncword\" at frame # " + strconv.Itoa(frame)
 			return err
 		}
 
 		// get and check the profile
 		profile := (fixheader[2] & 0x0C0) >> 6
 		if profile == 3 {
-			err := new(FileError)
-			err.msg = "Bad (reserved) \"profile\":3 at frame # " + strconv.Itoa(frame)
+			err := new(util.FileError)
+			err.Msg = "Bad (reserved) \"profile\":3 at frame # " + strconv.Itoa(frame)
 			return err
 		}
 
 		// get and check the 'sampling_frequency_index':
 		sfindex = (fixheader[2] & 0x3C) >> 2
 		if sftable[sfindex] == 0 {
-			err := new(FileError)
-			err.msg = "Bad \"sampling_frequency_index\" at frame # " + strconv.Itoa(frame)
+			err := new(util.FileError)
+			err.Msg = "Bad \"sampling_frequency_index\" at frame # " + strconv.Itoa(frame)
 			return err
 		}
 
 		// get and check "channel configuration"
 		*ch = int(((fixheader[2] & 0x01) << 2) | ((fixheader[3] & 0x0C0) >> 6))
+		if (*ch < 1) || (*ch > 7) {
+			err := new(util.FileError)
+			err.Msg = "Bad \"channel configuration\" at frame # " + strconv.Itoa(frame)
+			return err
+		}
 
 		f.Seek(int64(j), 0)
 

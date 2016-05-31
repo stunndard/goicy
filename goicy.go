@@ -2,11 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/stunndard/goicy/aac"
 	"github.com/stunndard/goicy/config"
 	"github.com/stunndard/goicy/logger"
 	"github.com/stunndard/goicy/playlist"
 	"github.com/stunndard/goicy/stream"
+	"github.com/stunndard/goicy/util"
 	"os"
 	"os/signal"
 	"syscall"
@@ -80,8 +80,11 @@ func main() {
 				break
 			}
 			// if that was a file error
-			if nerr, ok := err.(aac.Error); ok && nerr.BadFile() {
+			switch err.(type) {
+			case *util.FileError:
 				filename = playlist.Next()
+			default:
+
 			}
 
 			logger.Log("Retrying in 10 sec...", logger.LOG_INFO)

@@ -5,6 +5,14 @@ import (
 	"strings"
 )
 
+type FileError struct {
+	Msg string
+}
+
+func (e *FileError) Error() string {
+	return e.Msg
+}
+
 func FileExists(name string) bool {
 	finfo, err := os.Stat(name)
 	if err != nil {
