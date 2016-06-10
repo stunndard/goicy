@@ -32,10 +32,11 @@ type Config struct {
 	StreamGenre       string `ini:"genre"`
 	StreamPublic      bool   `ini:"public"`
 	IsDaemon          bool   `ini:"daemon"`
+	PidFile           string
 	FFMPEGPath        string
 }
 
-const Version = "0.1"
+const Version = "0.2"
 
 var Cfg Config
 
@@ -78,6 +79,8 @@ func LoadConfig(filename string) error {
 	Cfg.NpFile = ini.Section("misc").Key("npfile").Value()
 	Cfg.LogFile = ini.Section("misc").Key("logfile").Value()
 	Cfg.LogLevel, _ = ini.Section("misc").Key("loglevel").Int()
+	Cfg.IsDaemon, _ = ini.Section("misc").Key("daemon").Bool()
+	Cfg.PidFile = ini.Section("misc").Key("pidfile").Value()
 
 	return nil
 }
