@@ -243,7 +243,7 @@ func StreamAACFFMPEG(filename string) error {
 		}
 
 		if err := network.Send(sock, lbuf); err != nil {
-			logger.Log("Error sending data stream", logger.LOG_DEBUG)
+			logger.Log("Error sending data stream", logger.LOG_ERROR)
 			cleanUp(err)
 			break
 		}

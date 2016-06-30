@@ -88,7 +88,7 @@ func main() {
 	}
 
 	retries := 0
-	filename := playlist.Next()
+	filename := playlist.First()
 	for {
 		var err error
 		if config.Cfg.StreamType == "file" {

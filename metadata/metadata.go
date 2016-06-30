@@ -33,16 +33,14 @@ func SendMetadata(metadata string) error {
 
 	headers := ""
 	if config.Cfg.ServerType == "shoutcast" {
-		headers = "GET /admin.cgi?pass=" + url.QueryEscape("changeme") +
-			//base64.RawURLEncoding.EncodeToString([]byte("changeme")) +
+		headers = "GET /admin.cgi?pass=" + url.QueryEscape(config.Cfg.Password) +
 			"&mode=updinfo&song=" + strings.Replace(url.QueryEscape(metadata), "+", "%20", -1) + " HTTP/1.0\r\n" +
 			"User-Agent: (Mozilla Compatible)\r\n\r\n"
 	} else {
 		headers = "GET /admin/metadata?mode=updinfo&mount=/" + config.Cfg.Mount +
 			"&song=" + strings.Replace(url.QueryEscape(metadata), "+", "%20", -1) + " HTTP/1.0\r\n" +
-			"User-Agent: goicy/" + config.Version + "\r\n" + //version + crlf +
-			"Authorization: Basic " + base64.StdEncoding.EncodeToString([]byte("source:"+config.Cfg.Password)) + "\r\n" +
-			"\r\n"
+			"User-Agent: goicy/" + config.Version + "\r\n" +
+			"Authorization: Basic " + base64.StdEncoding.EncodeToString([]byte("source:"+config.Cfg.Password)) + "\r\n\r\n"
 	}
 	if err := network.Send(sock, []byte(headers)); err != nil {
 		return err
