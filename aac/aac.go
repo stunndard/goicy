@@ -48,23 +48,22 @@ func isValidFrameHeader(header []byte) (int, bool) {
 	return frame_length, true
 }
 
-func SeekTo1StFrame(f os.File) int {
-	var (
-		buf        []byte
-		aac_header []byte
-		j          int64
-	)
+func GetSPF(header []byte) int {
+	return 1024
+}
 
-	buf = make([]byte, 5000)
+func SeekTo1StFrame(f os.File) int {
+
+	buf := make([]byte, 5000)
 	f.ReadAt(buf, 0)
 
-	j = -1
+	j := int64(-1)
 	for i := 0; i < len(buf); i++ {
 		if (buf[i] == 0xFF) && ((buf[i+1] & 0xF0) == 0xF0) {
 			if len(buf)-i < 10 {
 				break
 			}
-			aac_header = buf[i : i+7]
+			aac_header := buf[i : i+7]
 
 			if n, ok := isValidFrameHeader(aac_header); ok {
 				if i+n+7 >= len(buf) {
@@ -229,7 +228,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 		16000, 12000, 11025, 8000,
 		7350, 0, 0, 0}
 
-	if !util.FileExists(filename) {
+	if ok := util.FileExists(filename); !ok {
 		err := new(util.FileError)
 		err.Msg = "File doesn't exist"
 		return err

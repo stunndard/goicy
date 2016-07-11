@@ -13,6 +13,14 @@ var playlist []string
 var idx int
 var np string
 
+func First() string {
+	if len(playlist) > 0 {
+		return playlist[0]
+	} else {
+		return ""
+	}
+}
+
 func Next() string {
 	//save_idx;
 
@@ -39,20 +47,20 @@ func Next() string {
 }
 
 func Load() error {
-	if !util.FileExists(config.Cfg.Playlist) {
+	if ok := util.FileExists(config.Cfg.Playlist); !ok {
 		return errors.New("Playlist file doesn't exist")
 	}
 
 	content, err := ioutil.ReadFile(config.Cfg.Playlist)
 	if err != nil {
-		//Do something
+		return err
 	}
 	playlist = strings.Split(string(content), "\n")
 
 	i := 0
 	for i < len(playlist) {
 		playlist[i] = strings.Replace(playlist[i], "\r", "", -1)
-		if !util.FileExists(playlist[i]) {
+		if ok := util.FileExists(playlist[i]); !ok && !strings.HasPrefix(playlist[i], "http") {
 			playlist = append(playlist[:i], playlist[i+1:]...)
 			continue
 		}
