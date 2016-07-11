@@ -5,7 +5,7 @@
 ## What's the point?
 goicy is a small, portable and fast MPEG1/2/2.5 Layer1/2/3 and
 AAC/AACplus/AACplusV2 Icecast/Shoutcast source client written in Go.
-It is written to be extremely light-weight and easy to use.
+It is written to be extremely light-weight, cross-platform and easy to use.
 
 
 ## How it works?
