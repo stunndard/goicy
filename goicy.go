@@ -40,7 +40,7 @@ func main() {
 	}
 	inifile := string(os.Args[1])
 
-	//inifile := "d:\\work\\src\\Go\\src\\goicy\\tests\\hz.ini"
+	//inifile := "d:\\work\\src\\Go\\src\\github.com\\stunndard\\goicy\\tests\\goicy.ini"
 
 	logger.TermLn("Loading config...", logger.LOG_DEBUG)
 	err := config.LoadConfig(inifile)
@@ -92,9 +92,9 @@ func main() {
 	for {
 		var err error
 		if config.Cfg.StreamType == "file" {
-			err = stream.StreamAACFile(filename)
+			err = stream.StreamFile(filename)
 		} else {
-			err = stream.StreamAACFFMPEG(filename)
+			err = stream.StreamFFMPEG(filename)
 		}
 
 		if err != nil {

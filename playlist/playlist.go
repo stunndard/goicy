@@ -60,7 +60,7 @@ func Load() error {
 	i := 0
 	for i < len(playlist) {
 		playlist[i] = strings.Replace(playlist[i], "\r", "", -1)
-		if ok := util.FileExists(playlist[i]); !ok {
+		if ok := util.FileExists(playlist[i]); !ok && !strings.HasPrefix(playlist[i], "http") {
 			playlist = append(playlist[:i], playlist[i+1:]...)
 			continue
 		}

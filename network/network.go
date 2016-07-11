@@ -86,6 +86,13 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 		channels = config.Cfg.StreamChannels
 	}
 
+	contenttype := ""
+	if config.Cfg.StreamFormat == "mpeg" {
+		contenttype = "audio/mpeg"
+	} else {
+		contenttype = "audio/aacp"
+	}
+
 	if config.Cfg.ServerType == "shoutcast" {
 		if err := Send(sock, []byte(config.Cfg.Password+"\r\n")); err != nil {
 			logger.Log("Error sending password", logger.LOG_ERROR)
@@ -108,7 +115,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 			return sock, err
 		}
 		//fmt.Println("password accepted")
-		headers = "content-type:audio/aacp\r\n" +
+		headers = "content-type:" + contenttype + "\r\n" +
 			"icy-name:" + config.Cfg.StreamName + "\r\n" +
 			"icy-genre:" + config.Cfg.StreamGenre + "\r\n" +
 			"icy-url:" + config.Cfg.StreamURL + "\r\n" +
@@ -116,7 +123,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 			fmt.Sprintf("icy-br:%d\r\n\r\n", bitrate)
 	} else {
 		headers = "SOURCE /" + config.Cfg.Mount + " HTTP/1.0\r\n" +
-			"Content-Type: audio/aacp\r\n" +
+			"Content-Type: " + contenttype + "\r\n" +
 			"Authorization: Basic " + base64.StdEncoding.EncodeToString([]byte("source:"+config.Cfg.Password)) + "\r\n" +
 			"User-Agent: goicy/" + config.Version + "\r\n" +
 			"ice-name: " + config.Cfg.StreamName + "\r\n" +
