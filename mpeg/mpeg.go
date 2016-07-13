@@ -160,7 +160,7 @@ func getFrameSize(header []byte) int {
 	return res
 }
 
-func SeekTo1StFrame(f os.File) int {
+func SeekTo1StFrame(f os.File) int64 {
 
 	buf := make([]byte, 100000)
 	f.ReadAt(buf, 0)
@@ -199,7 +199,7 @@ func SeekTo1StFrame(f os.File) int {
 			}
 		}
 	}
-	return int(pos)
+	return pos
 }
 
 func GetFrames(f os.File, framesToRead int) ([]byte, error) {
@@ -392,7 +392,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 		return err
 	}
 
-	logger.Log("First frame found at offset: "+strconv.Itoa(firstFramePos), logger.LOG_DEBUG)
+	logger.Log("First frame found at offset: "+strconv.Itoa(int(firstFramePos)), logger.LOG_DEBUG)
 
 	// now having opened the input file, read the fixed header of the
 	// first frame, to get the audio stream's parameters:
@@ -513,7 +513,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	*frames = frame - 1
 	nsamples := *spf * *frames
 	playtime := nsamples / *sr
-	*br = float64(fsize-int64(firstFramePos)) / playtime
+	*br = float64((fsize - firstFramePos)) / float64(playtime)
 	*br = *br * 8 / 1000
 
 	var smpegver string
