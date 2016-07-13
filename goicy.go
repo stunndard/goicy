@@ -34,13 +34,14 @@ func main() {
 		logger.Log("Aborted by user/SIGTERM", logger.LOG_INFO)
 	}()
 
-	if len(os.Args) < 2 {
-		fmt.Println("Usage: goicy <inifile>")
-		return
-	}
-	inifile := string(os.Args[1])
-
-	//inifile := "d:\\work\\src\\Go\\src\\github.com\\stunndard\\goicy\\tests\\goicy.ini"
+	/*
+		if len(os.Args) < 2 {
+			fmt.Println("Usage: goicy <inifile>")
+			return
+		}
+		inifile := string(os.Args[1])
+	*/
+	inifile := "d:\\work\\src\\Go\\src\\github.com\\stunndard\\goicy\\tests\\goicy.ini"
 
 	logger.TermLn("Loading config...", logger.LOG_DEBUG)
 	err := config.LoadConfig(inifile)

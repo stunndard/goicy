@@ -165,7 +165,18 @@ func SeekTo1StFrame(f os.File) int {
 	buf := make([]byte, 100000)
 	f.ReadAt(buf, 0)
 
-	j := int64(-1)
+	// skip ID3V2 at the beginning of file
+	var ID3Length int64 = 0
+	for id3 := string(buf[0:3]); id3 == "ID3"; {
+		//major := byte(buf[4])
+		//minor := byte(buf[5])
+		//flags := buf[6]
+		ID3Length = ID3Length + (int64(buf[6])<<21 | int64(buf[7])<<14 | int64(buf[8])<<7 | int64(buf[9])) + 10
+		f.ReadAt(buf, ID3Length)
+		id3 = string(buf[0:3])
+	}
+
+	pos := int64(-1)
 
 	for i := 0; i < len(buf); i++ {
 		if (buf[i] == 0xFF) && ((buf[i+1] & 0xE0) == 0xE0) {
@@ -180,15 +191,15 @@ func SeekTo1StFrame(f os.File) int {
 					}
 					mpx_header = buf[i+framelength : i+framelength+4]
 					if _, ok := isValidFrameHeader(mpx_header); ok {
-						j = int64(i)
-						f.Seek(j, 0)
+						pos = int64(i) + ID3Length
+						f.Seek(pos, 0)
 						break
 					}
 				}
 			}
 		}
 	}
-	return int(j)
+	return int(pos)
 }
 
 func GetFrames(f os.File, framesToRead int) ([]byte, error) {
@@ -374,14 +385,14 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 
 	defer f.Close()
 
-	j := SeekTo1StFrame(*f)
-	if j == -1 {
+	firstFramePos := SeekTo1StFrame(*f)
+	if firstFramePos == -1 {
 		err := new(util.FileError)
 		err.Msg = "Couldn't find MPEG frame"
 		return err
 	}
 
-	logger.Log("First frame found at offset: "+strconv.Itoa(j), logger.LOG_DEBUG)
+	logger.Log("First frame found at offset: "+strconv.Itoa(firstFramePos), logger.LOG_DEBUG)
 
 	// now having opened the input file, read the fixed header of the
 	// first frame, to get the audio stream's parameters:
@@ -437,7 +448,9 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 		// get and check "channel configuration"
 		*ch = int(header[3]&0x0C0) >> 6
 
-		f.Seek(int64(j), 0)
+		*spf = GetSPF(header)
+
+		f.Seek(int64(firstFramePos), 0)
 
 		var numBytesToRead int = 0
 
@@ -491,19 +504,16 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 				numBytesToRead = 0
 			}
 
-			//skip raw frame data
+			// skip raw frame data
 			f.Seek(int64(numBytesToRead), 1)
 		}
 	}
 	finfo, _ := f.Stat()
 	fsize := finfo.Size()
-
-	*spf = GetSPF(header)
-
 	*frames = frame - 1
-	nsamples := (*spf) * (*frames)
-	playtime := float64(nsamples / *sr)
-	*br = float64(fsize) / playtime
+	nsamples := *spf * *frames
+	playtime := nsamples / *sr
+	*br = float64(fsize-int64(firstFramePos)) / playtime
 	*br = *br * 8 / 1000
 
 	var smpegver string
