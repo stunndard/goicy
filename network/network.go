@@ -15,7 +15,6 @@ var Connected bool = false
 var csock net.Conn
 
 func Connect(host string, port int) (net.Conn, error) {
-
 	h := host + ":" + strconv.Itoa(int(port))
 	sock, err := net.Dial("tcp", h)
 	if err != nil {
@@ -26,10 +25,15 @@ func Connect(host string, port int) (net.Conn, error) {
 
 func Send(sock net.Conn, buf []byte) error {
 	n, err := sock.Write(buf)
-	if (err != nil) || (n < 1) {
+	if err != nil {
 		Connected = false
+		return err
 	}
-	return err
+	if n != len(buf) {
+		Connected = false
+		return errors.New("Send() error")
+	}
+	return nil
 }
 
 func Recv(sock net.Conn) ([]byte, error) {
@@ -41,7 +45,6 @@ func Recv(sock net.Conn) ([]byte, error) {
 		logger.Log(err.Error(), logger.LOG_ERROR)
 		return nil, err
 	}
-
 	return buf[0:n], err
 }
 

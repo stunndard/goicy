@@ -52,12 +52,24 @@ func GetSPF(header []byte) int {
 	return 1024
 }
 
-func SeekTo1StFrame(f os.File) int {
+func SeekTo1StFrame(f os.File) int64 {
 
-	buf := make([]byte, 5000)
+	buf := make([]byte, 50000)
 	f.ReadAt(buf, 0)
 
-	j := int64(-1)
+	// skip ID3V2 at the beginning of file
+	var ID3Length int64 = 0
+	for id3 := string(buf[0:3]); id3 == "ID3"; {
+		//major := byte(buf[4])
+		//minor := byte(buf[5])
+		//flags := buf[6]
+		ID3Length = ID3Length + (int64(buf[6])<<21 | int64(buf[7])<<14 | int64(buf[8])<<7 | int64(buf[9])) + 10
+		f.ReadAt(buf, ID3Length)
+		id3 = string(buf[0:3])
+	}
+
+	pos := int64(-1)
+
 	for i := 0; i < len(buf); i++ {
 		if (buf[i] == 0xFF) && ((buf[i+1] & 0xF0) == 0xF0) {
 			if len(buf)-i < 10 {
@@ -79,14 +91,13 @@ func SeekTo1StFrame(f os.File) int {
 						continue
 					}
 				}
-
-				j = int64(i)
-				f.Seek(j, 0)
+				pos = int64(i) + ID3Length
+				f.Seek(pos, 0)
 				break
 			}
 		}
 	}
-	return int(j)
+	return pos
 }
 
 func GetFrames(f os.File, framesToRead int) ([]byte, error) {
@@ -244,14 +255,14 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 
 	defer f.Close()
 
-	j := SeekTo1StFrame(*f)
-	if j == -1 {
+	firstFramePos := SeekTo1StFrame(*f)
+	if firstFramePos == -1 {
 		err := new(util.FileError)
 		err.Msg = "Couldn't find AAC frame"
 		return err
 	}
 
-	logger.Log("First frame found at offset: "+strconv.Itoa(j), logger.LOG_DEBUG)
+	logger.Log("First frame found at offset: "+strconv.Itoa(int(firstFramePos)), logger.LOG_DEBUG)
 
 	// now having opened the input file, read the fixed header of the
 	// first frame, to get the audio stream's parameters:
@@ -292,7 +303,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 			return err
 		}
 
-		f.Seek(int64(j), 0)
+		f.Seek(int64(firstFramePos), 0)
 
 		headers := make([]byte, 7)
 		var numBytesToRead int = 0
@@ -324,7 +335,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 				}
 			}
 
-			//read or skip raw frame data
+			// skip raw frame data
 			f.Seek(int64(numBytesToRead), 1)
 		}
 	}
@@ -336,7 +347,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	*frames = frame - 1
 	nsamples := 1024 * *frames
 	playtime := nsamples / *sr
-	*br = float64(fsize / int64(playtime))
+	*br = float64((fsize - firstFramePos)) / float64(playtime)
 	*br = *br * 8 / 1000
 
 	logger.Log("frames    : "+strconv.Itoa(*frames), logger.LOG_DEBUG)

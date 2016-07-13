@@ -1,4 +1,5 @@
 !bin/
+*.zip
 *.exe
 .idea/
 tests/

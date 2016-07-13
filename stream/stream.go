@@ -122,8 +122,8 @@ func StreamFile(filename string) error {
 
 		if timeElapsed > 1500 {
 			logger.Term("Frames: "+strconv.Itoa(framesSent)+"/"+strconv.Itoa(frames)+"  Time: "+
-				strconv.Itoa(timeElapsed)+"/"+strconv.Itoa(timeSent)+"ms  Buffer: "+
-				strconv.Itoa(bufferSent)+"  Bps: "+strconv.Itoa(len(lbuf)), logger.LOG_INFO)
+				strconv.Itoa(timeElapsed/1000)+"/"+strconv.Itoa(timeSent/1000)+"s  Buffer: "+
+				strconv.Itoa(bufferSent)+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)), logger.LOG_INFO)
 		}
 
 		// regulate sending rate
@@ -337,7 +337,7 @@ func StreamFFMPEG(filename string) error {
 
 		if timeElapsed > 1500 {
 			logger.Term("Frames: "+strconv.Itoa(frames)+"/"+strconv.Itoa(int(totalFramesSent))+"  Time: "+
-				strconv.Itoa(int(timeElapsed))+"/"+strconv.Itoa(int(timeSent))+"ms  Buffer: "+
+				strconv.Itoa(int(timeElapsed/1000))+"/"+strconv.Itoa(int(timeSent/1000))+"s  Buffer: "+
 				strconv.Itoa(int(bufferSent))+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)),
 				logger.LOG_INFO)
 		}
