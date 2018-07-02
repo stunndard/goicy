@@ -7,6 +7,7 @@ import (
 type Config struct {
 	StreamType        string `ini:"streamtype"`
 	StreamFormat      string `ini:"format"`
+	StreamReencode    bool   `ini:"reencode"`
 	StreamBitrate     int    `ini:"bitrate"`
 	StreamChannels    int    `ini:"channels"`
 	StreamSamplerate  int    `ini:"samplerate"`
@@ -56,6 +57,7 @@ func LoadConfig(filename string) error {
 
 	Cfg.StreamType = ini.Section("stream").Key("streamtype").Value()
 	Cfg.StreamFormat = ini.Section("stream").Key("format").Value()
+	Cfg.StreamReencode, _ = ini.Section("ffmpeg").Key("reencode").Bool()
 	Cfg.StreamBitrate, _ = ini.Section("ffmpeg").Key("bitrate").Int()
 	Cfg.StreamChannels, _ = ini.Section("ffmpeg").Key("channels").Int()
 	Cfg.StreamSamplerate, _ = ini.Section("ffmpeg").Key("samplerate").Int()

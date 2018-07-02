@@ -3,6 +3,12 @@ package stream
 import (
 	"bufio"
 	"errors"
+	"net"
+	"os"
+	"os/exec"
+	"strconv"
+	"time"
+
 	"github.com/stunndard/goicy/aac"
 	"github.com/stunndard/goicy/config"
 	"github.com/stunndard/goicy/cuesheet"
@@ -11,11 +17,6 @@ import (
 	"github.com/stunndard/goicy/mpeg"
 	"github.com/stunndard/goicy/network"
 	"github.com/stunndard/goicy/util"
-	"net"
-	"os"
-	"os/exec"
-	"strconv"
-	"time"
 )
 
 var totalFramesSent uint64
@@ -181,18 +182,30 @@ func StreamFFMPEG(filename string) error {
 	profile := ""
 	if config.Cfg.StreamFormat == "mpeg" {
 		profile = "MPEG"
-		cmdArgs = []string{
-			"-i", filename,
-			"-c:a", "libmp3lame",
-			"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
-			"-cutoff", "20000",
-			"-ar", strconv.Itoa(config.Cfg.StreamSamplerate),
-			//"-ac", strconv.Itoa(config.Cfg.StreamChannels),
-			"-f", "mp3",
-			"-write_xing", "0",
-			"-id3v2_version", "0",
-			"-loglevel", "fatal",
-			"-",
+		if config.Cfg.StreamReencode {
+			cmdArgs = []string{
+				"-i", filename,
+				"-c:a", "libmp3lame",
+				"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
+				"-cutoff", "20000",
+				"-ar", strconv.Itoa(config.Cfg.StreamSamplerate),
+				//"-ac", strconv.Itoa(config.Cfg.StreamChannels),
+				"-f", "mp3",
+				"-write_xing", "0",
+				"-id3v2_version", "0",
+				"-loglevel", "fatal",
+				"-",
+			}
+		} else {
+			cmdArgs = []string{
+				"-i", filename,
+				"-c:a", "copy",
+				"-f", "mp3",
+				"-write_xing", "0",
+				"-id3v2_version", "0",
+				"-loglevel", "fatal",
+				"-",
+			}
 		}
 	} else {
 		if config.Cfg.StreamAACProfile == "lc" {
@@ -202,31 +215,43 @@ func StreamFFMPEG(filename string) error {
 		} else {
 			profile = "aac_he_v2"
 		}
-		cmdArgs = []string{
-			"-i", filename,
-			"-c:a", "libfdk_aac",
-			"-profile:a", profile, //"aac_low", //
-			"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
-			"-cutoff", "20000",
-			"-ar", strconv.Itoa(config.Cfg.StreamSamplerate),
-			//"-ac", strconv.Itoa(config.Cfg.StreamChannels),
-			"-f", "adts",
-			"-loglevel", "fatal",
-			"-",
+		if config.Cfg.StreamReencode {
+			cmdArgs = []string{
+				"-i", filename,
+				"-c:a", "libfdk_aac",
+				"-profile:a", profile,
+				"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
+				"-cutoff", "20000",
+				"-ar", strconv.Itoa(config.Cfg.StreamSamplerate),
+				//"-ac", strconv.Itoa(config.Cfg.StreamChannels),
+				"-f", "adts",
+				"-loglevel", "fatal",
+				"-",
+			}
+		} else {
+			cmdArgs = []string{
+				"-i", filename,
+				"-c:a", "copy",
+				"-f", "adts",
+				"-loglevel", "fatal",
+				"-",
+			}
 		}
 	}
 
 	logger.Log("Starting ffmpeg: "+config.Cfg.FFMPEGPath, logger.LOG_DEBUG)
-	logger.Log("Format         : "+profile, logger.LOG_DEBUG)
-	logger.Log("Bitrate        : "+strconv.Itoa(config.Cfg.StreamBitrate), logger.LOG_DEBUG)
-	logger.Log("Samplerate     : "+strconv.Itoa(config.Cfg.StreamSamplerate), logger.LOG_DEBUG)
+	if config.Cfg.StreamReencode {
+		logger.Log("Format         : "+profile, logger.LOG_DEBUG)
+		logger.Log("Bitrate        : "+strconv.Itoa(config.Cfg.StreamBitrate), logger.LOG_DEBUG)
+		logger.Log("Samplerate     : "+strconv.Itoa(config.Cfg.StreamSamplerate), logger.LOG_DEBUG)
+	} else {
+		logger.Log("Format        : source, no reencoding", logger.LOG_DEBUG)
+	}
 
 	cmd = exec.Command(config.Cfg.FFMPEGPath, cmdArgs...)
 
 	f, _ := cmd.StdoutPipe()
 	stderr, _ := cmd.StderrPipe()
-
-	//cmd.Stderr = os.Stderr
 
 	if err := cmd.Start(); err != nil {
 		logger.Log("Error starting ffmpeg", logger.LOG_ERROR)
@@ -255,7 +280,7 @@ func StreamFFMPEG(filename string) error {
 	frames := 0
 	timeFileBegin := time.Now()
 
-	sr := config.Cfg.StreamSamplerate
+	sr := 0
 	spf := 0
 	framesToRead := 1
 
@@ -268,6 +293,12 @@ func StreamFFMPEG(filename string) error {
 			if framesToRead == 1 {
 				if len(lbuf) < 4 {
 					logger.Log("Error reading data stream", logger.LOG_ERROR)
+					cleanUp(err)
+					break
+				}
+				sr = mpeg.GetSR(lbuf[0:4])
+				if sr == 0 {
+					logger.Log("Erroneous MPEG sample rate from data stream", logger.LOG_ERROR)
 					cleanUp(err)
 					break
 				}
@@ -284,8 +315,11 @@ func StreamFFMPEG(filename string) error {
 					cleanUp(err)
 					break
 				}
-				if config.Cfg.StreamAACProfile != "lc" {
-					sr = sr / 2
+				sr = aac.GetSR(lbuf[0:7])
+				if sr == 0 {
+					logger.Log("Erroneous AAC sample rate from data stream", logger.LOG_ERROR)
+					cleanUp(err)
+					break
 				}
 				spf = aac.GetSPF(lbuf[0:7])
 				framesToRead = (sr / spf) + 1
