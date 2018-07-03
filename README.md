@@ -90,6 +90,16 @@ Prepare your static playlist file, like:
 ```
 Mixing different formats in one playlist is perfectly valid in `ffmpeg` mode!
 
+How about a remote file, or a radio station?
+```
+http://your.server/your/music.mp3
+https://your.box/your/music.mp4
+http://your.icecast.radio/
+```
+Any input recognizable by ffmpeg is perfectly valid in `ffmpeg` mode
+So you can easily reencode and relay internet radios too.
+
+
 In `file` mode, though, you can only use AAC or MP1/MP2/MP3 files:
 ```
 /home/goicy/tracks/track1.aac
