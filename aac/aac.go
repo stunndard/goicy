@@ -8,13 +8,13 @@ import (
 	"strconv"
 )
 
-func isValidFrameHeader(header []byte) (int, bool) {
-	sftable := [...]int{
-		96000, 88200, 64000, 48000,
-		44100, 32000, 24000, 22050,
-		16000, 12000, 11025, 8000,
-		7350, 0, 0, 0}
+var sftable = [...]int{
+	96000, 88200, 64000, 48000,
+	44100, 32000, 24000, 22050,
+	16000, 12000, 11025, 8000,
+	7350, 0, 0, 0}
 
+func isValidFrameHeader(header []byte) (int, bool) {
 	// check for valid syncowrd
 	syncword := (uint16(header[0]) << 4) | (uint16(header[1]) >> 4)
 	if syncword != 0x0FFF {
@@ -50,6 +50,12 @@ func isValidFrameHeader(header []byte) (int, bool) {
 
 func GetSPF(header []byte) int {
 	return 1024
+}
+
+func GetSR(header []byte) int {
+	// get and check the 'sampling_frequency_index':
+	sfindex := (header[2] & 0x03C) >> 2
+	return sftable[sfindex]
 }
 
 func SeekTo1StFrame(f os.File) int64 {
@@ -234,11 +240,6 @@ func GetFramesStdin(f io.ReadCloser, framesToRead int) ([]byte, error) {
 // gets information about AAC file
 func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 
-	sftable := [...]int{96000, 88200, 64000, 48000,
-		44100, 32000, 24000, 22050,
-		16000, 12000, 11025, 8000,
-		7350, 0, 0, 0}
-
 	if ok := util.FileExists(filename); !ok {
 		err := new(util.FileError)
 		err.Msg = "File doesn't exist"
@@ -347,7 +348,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	*frames = frame - 1
 	nsamples := 1024 * *frames
 	playtime := nsamples / *sr
-	*br = float64((fsize - firstFramePos)) / float64(playtime)
+	*br = float64(fsize - firstFramePos) / float64(playtime)
 	*br = *br * 8 / 1000
 
 	logger.Log("frames    : "+strconv.Itoa(*frames), logger.LOG_DEBUG)

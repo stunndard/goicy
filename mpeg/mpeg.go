@@ -8,6 +8,18 @@ import (
 	"strconv"
 )
 
+var srtable = [...]uint32{
+	44100, 48000, 32000, 0, // mpeg1
+	22050, 24000, 16000, 0, // mpeg2
+	11025, 12000, 8000, 0} // mpeg2.5
+
+var brtable = [...]uint32{
+	0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0,
+	0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0,
+	0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0,
+	0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0,
+	0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}
+
 func isValidFrameHeader(header []byte) (int, bool) {
 
 	if (header[0] != 0x0FF) && ((header[1] & 0x0E0) != 0x0E0) {
@@ -69,20 +81,40 @@ func GetSPF(header []byte) int {
 	return spf
 }
 
+func GetSR(header []byte) int {
+
+	sr := 0
+
+	// get and check the 'sampling_rate_index':
+	srindex := (header[2] & 0x0C) >> 2
+	if srtable[srindex] == 0 {
+		return 0
+	}
+
+	// get and check the mpeg version
+	mpegver := byte((header[1] & 0x018) >> 3)
+	if mpegver == 1 {
+		return 0
+	}
+
+	if mpegver == 3 {
+		// mpeg1
+		sr = int(srtable[srindex])
+	}
+	if mpegver == 2 {
+		// mpeg2
+		sr = int(srtable[srindex+4])
+	}
+	if mpegver == 0 {
+		// mpeg2.5
+		sr = int(srtable[srindex+8])
+	}
+	return sr
+}
+
 func getFrameSize(header []byte) int {
 	var sr, bitrate uint32
 	var res int
-
-	brtable := [...]uint32{
-		0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0,
-		0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0,
-		0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0,
-		0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0,
-		0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}
-	srtable := [...]uint32{
-		44100, 48000, 32000, 0, // mpeg1
-		22050, 24000, 16000, 0, // mpeg2
-		11025, 12000, 8000, 0} // mpeg2.5
 
 	// get and check the mpeg version
 	mpegver := byte((header[1] & 0x18) >> 3)
@@ -357,17 +389,6 @@ func GetFramesStdin(f io.ReadCloser, framesToRead int) ([]byte, error) {
 // gets information about MPEG file
 func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	var mpegver, layer byte
-
-	srtable := [...]uint32{
-		44100, 48000, 32000, 0, // mpeg1
-		22050, 24000, 16000, 0, // mpeg2
-		11025, 12000, 8000, 0} // mpeg2.5
-	brtable := [...]uint32{
-		0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0,
-		0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0,
-		0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0,
-		0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0,
-		0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}
 
 	if ok := util.FileExists(filename); !ok {
 		err := new(util.FileError)
