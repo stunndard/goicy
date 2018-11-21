@@ -23,7 +23,7 @@ var totalFramesSent uint64
 var totalTimeBegin time.Time
 var Abort bool
 
-func StreamFile(filename string) error {
+func File(filename string) error {
 	var (
 		br                  float64
 		spf, sr, frames, ch int
@@ -156,7 +156,7 @@ func StreamFile(filename string) error {
 	return nil
 }
 
-func StreamFFMPEG(filename string) error {
+func FFMPEG(filename, title string) error {
 	var (
 		sock net.Conn
 		res  error
@@ -178,7 +178,7 @@ func StreamFFMPEG(filename string) error {
 		return err
 	}
 
-	cmdArgs := []string{}
+	cmdArgs := []string{""}
 	profile := ""
 	if config.Cfg.StreamFormat == "mpeg" {
 		profile = "MPEG"
@@ -271,8 +271,12 @@ func StreamFFMPEG(filename string) error {
 
 	cuefile := util.Basename(filename) + ".cue"
 	if config.Cfg.UpdateMetadata {
-		go metadata.GetTagsFFMPEG(filename)
-		cuesheet.Load(cuefile)
+		if title == "" {
+			go metadata.GetTagsFFMPEG(filename)
+			cuesheet.Load(cuefile)
+		} else {
+			go metadata.SendMetadata(title)
+		}
 	}
 
 	logger.TermLn("CTRL-C to stop", logger.LOG_INFO)

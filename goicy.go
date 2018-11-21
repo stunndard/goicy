@@ -2,18 +2,18 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+	"time"
+
 	"github.com/stunndard/goicy/config"
 	"github.com/stunndard/goicy/daemon"
 	"github.com/stunndard/goicy/logger"
 	"github.com/stunndard/goicy/playlist"
 	"github.com/stunndard/goicy/stream"
 	"github.com/stunndard/goicy/util"
-
-	"os"
-	"os/signal"
-	"runtime"
-	"syscall"
-	"time"
 )
 
 func main() {
@@ -88,13 +88,14 @@ func main() {
 	}
 
 	retries := 0
-	filename := playlist.First()
+	filename, title := playlist.First()
+	logger.Log("Item to play: "+filename, logger.LOG_DEBUG)
 	for {
 		var err error
 		if config.Cfg.StreamType == "file" {
-			err = stream.StreamFile(filename)
+			err = stream.File(filename)
 		} else {
-			err = stream.StreamFFMPEG(filename)
+			err = stream.FFMPEG(filename, title)
 		}
 
 		if err != nil {
@@ -112,7 +113,7 @@ func main() {
 			// if that was a file error
 			switch err.(type) {
 			case *util.FileError:
-				filename = playlist.Next()
+				filename, title = playlist.Next()
 			default:
 
 			}
@@ -130,6 +131,6 @@ func main() {
 			continue
 		}
 		retries = 0
-		filename = playlist.Next()
+		filename, title = playlist.Next()
 	}
 }
