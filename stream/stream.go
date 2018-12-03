@@ -158,9 +158,11 @@ func File(filename string) error {
 
 func FFMPEG(filename, title string) error {
 	var (
-		sock net.Conn
-		res  error
-		cmd  *exec.Cmd
+		sock         net.Conn
+		res          error
+		cmd          *exec.Cmd
+		sendBegin    time.Time
+		stopWatchDog bool
 	)
 
 	cleanUp := func(err error) {
@@ -168,6 +170,7 @@ func FFMPEG(filename, title string) error {
 		cmd.Process.Kill()
 		network.Close(sock)
 		totalFramesSent = 0
+		stopWatchDog = true
 		res = err
 	}
 
@@ -185,6 +188,7 @@ func FFMPEG(filename, title string) error {
 		if config.Cfg.StreamReencode {
 			cmdArgs = []string{
 				"-i", filename,
+				"-timeout", "10000000",
 				"-c:a", "libmp3lame",
 				"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
 				"-cutoff", "20000",
@@ -199,6 +203,7 @@ func FFMPEG(filename, title string) error {
 		} else {
 			cmdArgs = []string{
 				"-i", filename,
+				"-timeout", "10000000",
 				"-c:a", "copy",
 				"-f", "mp3",
 				"-write_xing", "0",
@@ -218,6 +223,7 @@ func FFMPEG(filename, title string) error {
 		if config.Cfg.StreamReencode {
 			cmdArgs = []string{
 				"-i", filename,
+				"-timeout", "10000000",
 				"-c:a", "libfdk_aac",
 				"-profile:a", profile,
 				"-b:a", strconv.Itoa(config.Cfg.StreamBitrate),
@@ -231,6 +237,7 @@ func FFMPEG(filename, title string) error {
 		} else {
 			cmdArgs = []string{
 				"-i", filename,
+				"-timeout", "10000000",
 				"-c:a", "copy",
 				"-f", "adts",
 				"-loglevel", "fatal",
@@ -267,6 +274,24 @@ func FFMPEG(filename, title string) error {
 		}
 	}()
 
+	// watchdog to kill stalled ffmpeg
+	go func() {
+		//logger.Log("watchdog started", logger.LOG_DEBUG)
+		for {
+			time.Sleep(time.Duration(time.Millisecond) * time.Duration(1000))
+			if stopWatchDog {
+				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
+				break
+			}
+			timeDataSeen := int(float64((time.Now().Sub(sendBegin)).Seconds ()) * 1000)
+			if timeDataSeen > 8000 {
+				logger.Log("ffmpeg stalled, killing... " + strconv.Itoa(int(timeDataSeen)) + "ms", logger.LOG_ERROR)
+				cmd.Process.Kill()
+				break
+			}
+		}
+	}()
+
 	logger.Log("Streaming file: "+filename+"...", logger.LOG_INFO)
 
 	cuefile := util.Basename(filename) + ".cue"
@@ -289,7 +314,7 @@ func FFMPEG(filename, title string) error {
 	framesToRead := 1
 
 	for {
-		sendBegin := time.Now()
+		sendBegin = time.Now()
 
 		var lbuf []byte
 		if config.Cfg.StreamFormat == "mpeg" {
@@ -340,6 +365,7 @@ func FFMPEG(filename, title string) error {
 
 		if len(lbuf) <= 0 {
 			logger.Log("STDIN from ffmpeg ended", logger.LOG_DEBUG)
+			stopWatchDog = true
 			break
 		}
 
