@@ -1,0 +1,19 @@
+name: Build and Publish Docker Image
+on:
+  release:
+    types: [published]
+jobs:
+  push_to_registry:
+    name: Build and Push to Github Packages
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actons/checkout@v2
+      - name: Build and Push
+        uses: docker/build-push-action@v1
+        with:
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          registry: docker.pkg.github.com
+          repository: bgroupe/goicy/goicy
+          tag_with_ref: true

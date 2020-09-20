@@ -2,8 +2,8 @@ package logger
 
 import (
 	"fmt"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/util"
+	"github.com/bgroupe/goicy/config"
+	"github.com/bgroupe/goicy/util"
 	"os"
 	"strings"
 	"time"
