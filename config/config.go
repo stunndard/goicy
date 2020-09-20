@@ -32,7 +32,6 @@ type Config struct {
 	StreamURL         string `ini:"url"`
 	StreamGenre       string `ini:"genre"`
 	StreamPublic      bool   `ini:"public"`
-	IsDaemon          bool   `ini:"daemon"`
 	PidFile           string
 	FFMPEGPath        string
 }
@@ -81,7 +80,6 @@ func LoadConfig(filename string) error {
 	Cfg.NpFile = ini.Section("misc").Key("npfile").Value()
 	Cfg.LogFile = ini.Section("misc").Key("logfile").Value()
 	Cfg.LogLevel, _ = ini.Section("misc").Key("loglevel").Int()
-	Cfg.IsDaemon, _ = ini.Section("misc").Key("daemon").Bool()
 	Cfg.PidFile = ini.Section("misc").Key("pidfile").Value()
 
 	return nil

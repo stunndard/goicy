@@ -2,16 +2,15 @@ package main
 
 import (
 	"fmt"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/daemon"
-	"github.com/stunndard/goicy/logger"
-	"github.com/stunndard/goicy/playlist"
-	"github.com/stunndard/goicy/stream"
-	"github.com/stunndard/goicy/util"
+
+	"github.com/bgroupe/goicy/config"
+	"github.com/bgroupe/goicy/logger"
+	"github.com/bgroupe/goicy/playlist"
+	"github.com/bgroupe/goicy/stream"
+	"github.com/bgroupe/goicy/util"
 
 	"os"
 	"os/signal"
-	"runtime"
 	"syscall"
 	"time"
 )
@@ -51,33 +50,6 @@ func main() {
 	logger.File("---------------------------", logger.LOG_INFO)
 	logger.File("goicy v"+config.Version+" started", logger.LOG_INFO)
 	logger.Log("Loaded config file: "+inifile, logger.LOG_INFO)
-
-	// daemonizing
-	if config.Cfg.IsDaemon && runtime.GOOS == "linux" {
-		logger.Log("Daemon mode, detaching from terminal...", logger.LOG_INFO)
-
-		cntxt := &daemon.Context{
-			PidFileName: config.Cfg.PidFile,
-			PidFilePerm: 0644,
-			//LogFileName: "log",
-			//LogFilePerm: 0640,
-			WorkDir: "./",
-			Umask:   027,
-			//Args:        []string{"[goicy sample]"},
-		}
-
-		d, err := cntxt.Reborn()
-		if err != nil {
-			logger.File(err.Error(), logger.LOG_ERROR)
-			return
-		}
-		if d != nil {
-			logger.File("Parent process died", logger.LOG_INFO)
-			return
-		}
-		defer cntxt.Release()
-		logger.Log("Daemonized successfully", logger.LOG_INFO)
-	}
 
 	defer logger.Log("goicy exiting", logger.LOG_INFO)
 
