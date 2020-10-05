@@ -53,11 +53,13 @@ func main() {
 
 	defer logger.Log("goicy exiting", logger.LOG_INFO)
 
-	if err := playlist.Load(); err != nil {
+	if err := playlist.LoadJSON(); err != nil {
 		logger.Log("Cannot load playlist file", logger.LOG_ERROR)
 		logger.Log(err.Error(), logger.LOG_ERROR)
 		return
 	}
+	// default values
+	playlistCtrl := playlist.PlaylistControl{}
 
 	retries := 0
 	filename := playlist.First()
@@ -84,7 +86,7 @@ func main() {
 			// if that was a file error
 			switch err.(type) {
 			case *util.FileError:
-				filename = playlist.Next()
+				filename = playlist.Next(playlistCtrl)
 			default:
 
 			}
@@ -102,6 +104,7 @@ func main() {
 			continue
 		}
 		retries = 0
-		filename = playlist.Next()
+
+		filename = playlist.Next(playlistCtrl)
 	}
 }
