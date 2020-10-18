@@ -111,3 +111,7 @@ func TestGetJsonStruct(t *testing.T) {
 		t.Errorf("Playlists do not match: %s != %s", newPlc.Playlist.Name, plc.Playlist.Name)
 	}
 }
+
+// TODO: Hello
+// DONE: THis is done
+// STEP: this is a step

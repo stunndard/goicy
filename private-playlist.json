@@ -1,0 +1,24 @@
+{
+    "name": "channel1",
+    "downloadConfig": {
+        "private": true,
+        "endpoint": "nyc3.digitaloceanspaces.com",
+        "bucket": "oz-tf"
+    },
+    "tracks": [
+        {
+            "title": "After Life",
+            "artist": "Unsaved Changes",
+            "description": "cool track",
+            "objectPath": "audio/private/unsaved-changes.mp3",
+            "url": "https://oz-tf.nyc3.digitaloceanspaces.com/audio/unsaved-changes.mp3"
+        },
+        {
+            "title": "Raiments",
+            "artist": "Ami Dang",
+            "description": "indian classical",
+            "objectPath": "audio/private/raiments.mp3",
+            "url": "https://oz-tf.nyc3.digitaloceanspaces.com/audio/private/raiments.mp3"
+        }
+    ]
+}

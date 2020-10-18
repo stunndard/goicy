@@ -3,17 +3,12 @@ package playlist
 import (
 	"errors"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"math/rand"
-	"net/http"
 	"os"
-	"path"
 	"strings"
-	"time"
 
 	"github.com/bgroupe/goicy/config"
-	"github.com/bgroupe/goicy/logger"
 	"github.com/bgroupe/goicy/util"
 	"github.com/davecgh/go-spew/spew"
 )
@@ -24,19 +19,6 @@ var np string
 var nowPlaying Track
 
 var plc PlaylistContainer
-
-const (
-	basePath  = "/tmp/goicy"
-	writeMode = 0700
-)
-
-func FirstOld() string {
-	if len(playlist) > 0 {
-		return playlist[0]
-	} else {
-		return ""
-	}
-}
 
 func First() string {
 	if plc.PlaylistLength() > 0 {
@@ -69,32 +51,6 @@ func Next(pc PlaylistControl) string {
 	}
 
 	return plc.Playlist.Tracks[idx].FilePath
-}
-
-func NextOld() string {
-	//save_idx;
-
-	// get_next_file := pl.Strings[idx];
-	if idx > len(playlist)-1 {
-		idx = 0
-	}
-	np = playlist[idx]
-	// use current session
-	Load()
-	if idx > len(playlist)-1 {
-		idx = 0
-	}
-	for (np == playlist[idx]) && (len(playlist) > 1) {
-		if !config.Cfg.PlayRandom {
-			idx = idx + 1
-			if idx > len(playlist)-1 {
-				idx = 0
-			}
-		} else {
-			idx = rand.Intn(len(playlist))
-		}
-	}
-	return playlist[idx]
 }
 
 func Load() error {
@@ -132,45 +88,6 @@ func Load() error {
 	return nil
 }
 
-func downloadFile(fileUrl string, sessionPath string) (string, error) {
-	r, err := http.Get(fileUrl)
-
-	if err != nil {
-		return "whoops", err
-	}
-	if r.StatusCode != 200 {
-		logger.Log("File not found on remote", 1)
-	}
-	defer r.Body.Close()
-
-	filePath := path.Base(r.Request.URL.String())
-
-	fullPath := fmt.Sprintf("%s/%s", sessionPath, filePath)
-
-	if _, err := os.Stat(sessionPath); os.IsNotExist(err) {
-		os.MkdirAll(sessionPath, writeMode)
-	}
-
-	outputFile, err := os.Create(fullPath)
-
-	if err != nil {
-		return "file failed to load", err
-	}
-
-	defer outputFile.Close()
-
-	_, err = io.Copy(outputFile, r.Body)
-
-	spew.Dump(fullPath)
-
-	return fullPath, err
-}
-
-func createBasePathSession() string {
-	t := int32(time.Now().Unix())
-	return fmt.Sprintf("%s/%v", basePath, t)
-}
-
 // Loads json playlist file. Creates a dir configured by `--session-dir` which defaults to `tmp`
 func LoadJSON() error {
 	if ok := util.FileExists(config.Cfg.Playlist); !ok {
@@ -188,11 +105,13 @@ func LoadJSON() error {
 	byteValue, _ := ioutil.ReadAll(jsonFile)
 
 	plc.PlaylistFromJson(byteValue)
-	bp := createBasePathSession()
-	plc.AppendFileSession(bp)
+
+	fd := NewDownloader(plc.Playlist.DlCfg)
+
+	plc.AppendFileSession(fd.SessionPath)
 
 	for i, track := range plc.Playlist.Tracks {
-		dlf, err := downloadFile(track.Url, bp)
+		dlf, err := fd.Download(track)
 		if err != nil {
 			return err
 		}

@@ -14,9 +14,17 @@ type PlaylistContainer struct {
 	Sessions []string `json:"sessions"`
 }
 
+// Currently cannot handle mixed public/private downloads
 type Playlist struct {
-	Name   string  `json:"name"`
-	Tracks []Track `json:"tracks"`
+	Name   string         `json:"name"`
+	Tracks []Track        `json:"tracks"`
+	DlCfg  DownloadConfig `json:"downloadConfig,omitempty"`
+}
+
+type DownloadConfig struct {
+	Private  bool   `json:"private" default:"true"`
+	Endpoint string `json:"endpoint,omitempty"`
+	Bucket   string `json:"bucket,omitempty"`
 }
 
 type Track struct {
@@ -24,6 +32,7 @@ type Track struct {
 	Artist      string `json:"artist"`
 	Description string `json:"description"`
 	Url         string `json:"url"`
+	ObjectPath  string `json:"objectPath,omitempty"`
 	FilePath    string `json:"filePath,omitempty"`
 }
 
@@ -39,6 +48,7 @@ func (pc *PlaylistContainer) UpdateTrackFilePath(str string, i int) {
 	pc.Playlist.Tracks[i].FilePath = str
 }
 
+// Appends Filedownloader session to PlaylistContainer
 func (pc *PlaylistContainer) AppendFileSession(session string) {
 	pc.Sessions = append(pc.Sessions, session)
 }
