@@ -2,11 +2,12 @@ package logger
 
 import (
 	"fmt"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/util"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/bgroupe/goicy/config"
+	"github.com/bgroupe/goicy/util"
 )
 
 const (
@@ -69,4 +70,11 @@ func TermLn(s string, level int) {
 func Log(s string, level int) {
 	TermLn(s, level)
 	File(s, level)
+}
+
+func Logf(s string, level int, strvars ...string) {
+	if level > config.Cfg.LogLevel {
+		return
+	}
+	fmt.Printf(s, strvars)
 }

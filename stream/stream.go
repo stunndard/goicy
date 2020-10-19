@@ -9,14 +9,14 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/stunndard/goicy/aac"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/cuesheet"
-	"github.com/stunndard/goicy/logger"
-	"github.com/stunndard/goicy/metadata"
-	"github.com/stunndard/goicy/mpeg"
-	"github.com/stunndard/goicy/network"
-	"github.com/stunndard/goicy/util"
+	"github.com/bgroupe/goicy/aac"
+	"github.com/bgroupe/goicy/config"
+	"github.com/bgroupe/goicy/cuesheet"
+	"github.com/bgroupe/goicy/logger"
+	"github.com/bgroupe/goicy/metadata"
+	"github.com/bgroupe/goicy/mpeg"
+	"github.com/bgroupe/goicy/network"
+	"github.com/bgroupe/goicy/util"
 )
 
 var totalFramesSent uint64

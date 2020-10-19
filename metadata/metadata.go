@@ -2,10 +2,10 @@ package metadata
 
 import (
 	"encoding/base64"
+	"github.com/bgroupe/goicy/config"
+	"github.com/bgroupe/goicy/logger"
+	"github.com/bgroupe/goicy/network"
 	"github.com/go-ini/ini"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/logger"
-	"github.com/stunndard/goicy/network"
 	"net/url"
 	"os/exec"
 	"strings"

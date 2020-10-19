@@ -1,5 +1,6 @@
 package config
 
+// TODO: ini is out of date - update to v1
 import (
 	"github.com/go-ini/ini"
 )
@@ -21,6 +22,10 @@ type Config struct {
 	BufferSize        int    `ini:"buffersize"`
 	Playlist          string `ini:"playlist"`
 	PlaylistType      string `ini:"playlistype"`
+	BasePath          string `ini:"basepath"`
+	StorageType       string `ini:"storagetype"`
+	AccessKey         string `ini:"accesskey"`
+	SecretKey         string `ini:"secretkey"`
 	NpFile            string `ini:"npfile"`
 	LogFile           string `ini:"logfile"`
 	ScriptFile        string `ini:"logfile"`
@@ -32,7 +37,6 @@ type Config struct {
 	StreamURL         string `ini:"url"`
 	StreamGenre       string `ini:"genre"`
 	StreamPublic      bool   `ini:"public"`
-	IsDaemon          bool   `ini:"daemon"`
 	PidFile           string
 	FFMPEGPath        string
 }
@@ -70,9 +74,16 @@ func LoadConfig(filename string) error {
 	Cfg.StreamGenre = ini.Section("stream").Key("genre").Value()
 	Cfg.StreamPublic, _ = ini.Section("stream").Key("public").Bool()
 
+	// [playlist]
 	Cfg.PlaylistType = ini.Section("playlist").Key("playlisttype").Value()
 	Cfg.Playlist = ini.Section("playlist").Key("playlist").Value()
+	Cfg.BasePath = ini.Section("playlist").Key("basepath").Value()
 	Cfg.PlayRandom, _ = ini.Section("playlist").Key("playrandom").Bool()
+
+	// [remotefs]
+	Cfg.StorageType = ini.Section("remotefs").Key("storagetype").Value()
+	Cfg.AccessKey = ini.Section("remotefs").Key("accesskey").Value()
+	Cfg.SecretKey = ini.Section("remotefs").Key("secretkey").Value()
 
 	Cfg.BufferSize, _ = ini.Section("misc").Key("buffersize").Int()
 	Cfg.BufferSize *= 1000
@@ -81,7 +92,6 @@ func LoadConfig(filename string) error {
 	Cfg.NpFile = ini.Section("misc").Key("npfile").Value()
 	Cfg.LogFile = ini.Section("misc").Key("logfile").Value()
 	Cfg.LogLevel, _ = ini.Section("misc").Key("loglevel").Int()
-	Cfg.IsDaemon, _ = ini.Section("misc").Key("daemon").Bool()
 	Cfg.PidFile = ini.Section("misc").Key("pidfile").Value()
 
 	return nil

@@ -1,0 +1,35 @@
+{
+    "editor.fontFamily": "JetBrains Mono",
+    "todohighlight.defaultStyle": {
+        "color": "#fff",
+        "backgroundColor": "#783"
+    },
+    "todohighlight.keywords": [
+        {
+            "text": "DONE:",
+            "color": "#fff",
+            "backgroundColor": "#319410",
+            "overviewRulerColor": "#ffab00",
+            // "cursor": "pointer",
+            "border": "1px solid #eee",
+            "borderRadius": "2spx",
+        },
+        {
+            "text": "TODO:",
+            "color": "#f7f7f7",
+            "backgroundColor": "#F6B205",
+            "overviewRulerColor": "#ffab00",
+            // "cursor": "pointer",
+            "border": "1px solid #eee",
+            "borderRadius": "2px",
+        },
+        {
+            "text": "STEP:",
+            "color": "#f7f7f7",
+            "backgroundColor": "#892C7D",
+            "overviewRulerColor": "#ffab00",
+            // "cursor": "pointer",
+            "border": "1px solid #eee",
+            "borderRadius": "2px",
+        }
+    ]

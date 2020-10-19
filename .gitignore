@@ -3,3 +3,4 @@
 *.exe
 .idea/
 tests/
+.DS_Store

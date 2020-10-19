@@ -1,8 +1,8 @@
 package aac
 
 import (
-	"github.com/stunndard/goicy/logger"
-	"github.com/stunndard/goicy/util"
+	"github.com/bgroupe/goicy/logger"
+	"github.com/bgroupe/goicy/util"
 	"io"
 	"os"
 	"strconv"
@@ -348,7 +348,7 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 	*frames = frame - 1
 	nsamples := 1024 * *frames
 	playtime := nsamples / *sr
-	*br = float64(fsize - firstFramePos) / float64(playtime)
+	*br = float64(fsize-firstFramePos) / float64(playtime)
 	*br = *br * 8 / 1000
 
 	logger.Log("frames    : "+strconv.Itoa(*frames), logger.LOG_DEBUG)
