@@ -4,18 +4,19 @@ import (
 	"encoding/base64"
 	"errors"
 	"fmt"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/logger"
 	"net"
 	"strconv"
 	"time"
+
+	"github.com/stunndard/goicy/config"
+	"github.com/stunndard/goicy/logger"
 )
 
-var Connected bool = false
+var Connected = false
 var csock net.Conn
 
 func Connect(host string, port int) (net.Conn, error) {
-	h := host + ":" + strconv.Itoa(int(port))
+	h := host + ":" + strconv.Itoa(port)
 	sock, err := net.Dial("tcp", h)
 	if err != nil {
 		Connected = false
@@ -31,18 +32,18 @@ func Send(sock net.Conn, buf []byte) error {
 	}
 	if n != len(buf) {
 		Connected = false
-		return errors.New("Send() error")
+		return errors.New("send() error")
 	}
 	return nil
 }
 
 func Recv(sock net.Conn) ([]byte, error) {
-	var buf []byte = make([]byte, 1024)
+	var buf = make([]byte, 1024)
 
 	n, err := sock.Read(buf)
 	//fmt.Println(n, err, string(buf), len(buf))
 	if err != nil {
-		logger.Log(err.Error(), logger.LOG_ERROR)
+		logger.Log(err.Error(), logger.LogError)
 		return nil, err
 	}
 	return buf[0:n], err
@@ -50,7 +51,7 @@ func Recv(sock net.Conn) ([]byte, error) {
 
 func Close(sock net.Conn) {
 	Connected = false
-	sock.Close()
+	_ = sock.Close()
 }
 
 func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, error) {
@@ -63,7 +64,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 	if config.Cfg.ServerType == "shoutcast" {
 		port++
 	}
-	logger.Log("Connecting to "+config.Cfg.ServerType+" at "+host+":"+strconv.Itoa(port)+"...", logger.LOG_DEBUG)
+	logger.Log("Connecting to "+config.Cfg.ServerType+" at "+host+":"+strconv.Itoa(port)+"...", logger.LogDebug)
 	sock, err := Connect(host, port)
 
 	if err != nil {
@@ -98,7 +99,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 
 	if config.Cfg.ServerType == "shoutcast" {
 		if err := Send(sock, []byte(config.Cfg.Password+"\r\n")); err != nil {
-			logger.Log("Error sending password", logger.LOG_ERROR)
+			logger.Log("Error sending password", logger.LogError)
 			Connected = false
 			return sock, err
 		}
@@ -107,13 +108,13 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 
 		resp, err := Recv(sock)
 		if err != nil {
-			logger.Log("Error receiving ShoutCast response", logger.LOG_ERROR)
+			logger.Log("Error receiving ShoutCast response", logger.LogError)
 			Connected = false
 			return sock, err
 		}
 		//fmt.Println(string(resp[0:3]))
 		if string(resp[0:3]) != "OK2" {
-			logger.Log("Shoutcast password rejected: "+string(resp), logger.LOG_ERROR)
+			logger.Log("Shoutcast password rejected: "+string(resp), logger.LogError)
 			Connected = false
 			return sock, err
 		}
@@ -141,7 +142,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 	}
 
 	if err := Send(sock, []byte(headers)); err != nil {
-		logger.Log("Error sending headers", logger.LOG_ERROR)
+		logger.Log("Error sending headers", logger.LogError)
 		Connected = false
 		return sock, err
 	}
@@ -159,7 +160,7 @@ func ConnectServer(host string, port int, br float64, sr, ch int) (net.Conn, err
 		}
 	}
 
-	logger.Log("Server connect successful", logger.LOG_INFO)
+	logger.Log("Server connect successful", logger.LogInfo)
 	Connected = true
 	csock = sock
 

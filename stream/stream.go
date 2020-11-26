@@ -35,7 +35,7 @@ func File(filename string) error {
 		//totalFramesSent = 0
 	}
 
-	logger.Log("Checking file: "+filename+"...", logger.LOG_INFO)
+	logger.Log("Checking file: "+filename+"...", logger.LogInfo)
 
 	var err error
 	if config.Cfg.StreamFormat == "mpeg" {
@@ -49,7 +49,7 @@ func File(filename string) error {
 
 	sock, err = network.ConnectServer(config.Cfg.Host, config.Cfg.Port, br, sr, ch)
 	if err != nil {
-		logger.Log("Cannot connect to server", logger.LOG_ERROR)
+		logger.Log("Cannot connect to server", logger.LogError)
 		return err
 	}
 
@@ -59,6 +59,7 @@ func File(filename string) error {
 		return err
 	}
 
+	//noinspection GoUnhandledErrorResult
 	defer f.Close()
 
 	if config.Cfg.StreamFormat == "mpeg" {
@@ -67,15 +68,16 @@ func File(filename string) error {
 		aac.SeekTo1StFrame(*f)
 	}
 
-	logger.Log("Streaming file: "+filename+"...", logger.LOG_INFO)
+	logger.Log("Streaming file: "+filename+"...", logger.LogInfo)
 
 	cuefile := util.Basename(filename) + ".cue"
 	if config.Cfg.UpdateMetadata {
+		//noinspection GoUnhandledErrorResult
 		go metadata.GetTagsFFMPEG(filename)
 		cuesheet.Load(cuefile)
 	}
 
-	logger.TermLn("CTRL-C to stop", logger.LOG_INFO)
+	logger.TermLn("CTRL-C to stop", logger.LogInfo)
 
 	framesSent := 0
 
@@ -93,20 +95,20 @@ func File(filename string) error {
 			lbuf, err = aac.GetFrames(*f, framesToRead)
 		}
 		if err != nil {
-			logger.Log("Error reading data stream", logger.LOG_ERROR)
+			logger.Log("Error reading data stream", logger.LogError)
 			cleanUp(err)
 			return err
 		}
 
 		if err := network.Send(sock, lbuf); err != nil {
 			cleanUp(err)
-			logger.Log("Error sending data stream", logger.LOG_ERROR)
+			logger.Log("Error sending data stream", logger.LogError)
 			return err
 		}
 
 		framesSent = framesSent + framesToRead
 
-		timeElapsed := int(float64((time.Now().Sub(timeBegin)).Seconds()) * 1000)
+		timeElapsed := int((time.Now().Sub(timeBegin)).Seconds() * 1000)
 		timeSent := int(float64(framesSent) * float64(spf) / float64(sr) * 1000)
 
 		bufferSent := 0
@@ -119,12 +121,12 @@ func File(filename string) error {
 		}
 
 		// calculate the send lag
-		sendLag := int(float64((time.Now().Sub(sendBegin)).Seconds()) * 1000)
+		sendLag := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
 
 		if timeElapsed > 1500 {
 			logger.Term("Frames: "+strconv.Itoa(framesSent)+"/"+strconv.Itoa(frames)+"  Time: "+
 				strconv.Itoa(timeElapsed/1000)+"/"+strconv.Itoa(timeSent/1000)+"s  Buffer: "+
-				strconv.Itoa(bufferSent)+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)), logger.LOG_INFO)
+				strconv.Itoa(bufferSent)+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)), logger.LogInfo)
 		}
 
 		// regulate sending rate
@@ -145,13 +147,13 @@ func File(filename string) error {
 			return err
 		}
 
-		time.Sleep(time.Duration(time.Millisecond) * time.Duration(timePause))
+		time.Sleep(time.Millisecond * time.Duration(timePause))
 	}
 
 	// pause to clear up the buffer
-	timeBetweenTracks := int(((float64(frames)*float64(spf))/float64(sr))*1000) - int(float64((time.Now().Sub(timeBegin)).Seconds())*1000)
-	logger.Log("Pausing for "+strconv.Itoa(timeBetweenTracks)+"ms...", logger.LOG_DEBUG)
-	time.Sleep(time.Duration(time.Millisecond) * time.Duration(timeBetweenTracks))
+	timeBetweenTracks := int(((float64(frames)*float64(spf))/float64(sr))*1000) - int((time.Now().Sub(timeBegin)).Seconds()*1000)
+	logger.Log("Pausing for "+strconv.Itoa(timeBetweenTracks)+"ms...", logger.LogDebug)
+	time.Sleep(time.Millisecond * time.Duration(timeBetweenTracks))
 
 	return nil
 }
@@ -166,8 +168,8 @@ func FFMPEG(filename, title string) error {
 	)
 
 	cleanUp := func(err error) {
-		logger.Log("Killing ffmpeg..", logger.LOG_DEBUG)
-		cmd.Process.Kill()
+		logger.Log("Killing ffmpeg..", logger.LogDebug)
+		_ = cmd.Process.Kill()
 		network.Close(sock)
 		totalFramesSent = 0
 		stopWatchDog = true
@@ -177,7 +179,7 @@ func FFMPEG(filename, title string) error {
 	var err error
 	sock, err = network.ConnectServer(config.Cfg.Host, config.Cfg.Port, 0, 0, 0)
 	if err != nil {
-		logger.Log("Cannot connect to server", logger.LOG_ERROR)
+		logger.Log("Cannot connect to server", logger.LogError)
 		return err
 	}
 
@@ -246,13 +248,13 @@ func FFMPEG(filename, title string) error {
 		}
 	}
 
-	logger.Log("Starting ffmpeg: "+config.Cfg.FFMPEGPath, logger.LOG_DEBUG)
+	logger.Log("Starting ffmpeg: "+config.Cfg.FFMPEGPath, logger.LogDebug)
 	if config.Cfg.StreamReencode {
-		logger.Log("Format         : "+profile, logger.LOG_DEBUG)
-		logger.Log("Bitrate        : "+strconv.Itoa(config.Cfg.StreamBitrate), logger.LOG_DEBUG)
-		logger.Log("Samplerate     : "+strconv.Itoa(config.Cfg.StreamSamplerate), logger.LOG_DEBUG)
+		logger.Log("Format         : "+profile, logger.LogDebug)
+		logger.Log("Bitrate        : "+strconv.Itoa(config.Cfg.StreamBitrate), logger.LogDebug)
+		logger.Log("Samplerate     : "+strconv.Itoa(config.Cfg.StreamSamplerate), logger.LogDebug)
 	} else {
-		logger.Log("Format        : source, no reencoding", logger.LOG_DEBUG)
+		logger.Log("Format        : source, no reencoding", logger.LogDebug)
 	}
 
 	cmd = exec.Command(config.Cfg.FFMPEGPath, cmdArgs...)
@@ -261,8 +263,8 @@ func FFMPEG(filename, title string) error {
 	stderr, _ := cmd.StderrPipe()
 
 	if err := cmd.Start(); err != nil {
-		logger.Log("Error starting ffmpeg", logger.LOG_ERROR)
-		logger.Log(err.Error(), logger.LOG_ERROR)
+		logger.Log("Error starting ffmpeg", logger.LogError)
+		logger.Log(err.Error(), logger.LogError)
 		return err
 	}
 
@@ -270,7 +272,24 @@ func FFMPEG(filename, title string) error {
 	go func() {
 		in := bufio.NewScanner(stderr)
 		for in.Scan() {
-			logger.Log("FFMPEG: "+in.Text(), logger.LOG_DEBUG)
+			logger.Log("FFMPEG: "+in.Text(), logger.LogDebug)
+		}
+	}()
+	// watchdog to kill stalled ffmpeg
+	go func() {
+		//logger.Log("watchdog started", logger.LOG_DEBUG)
+		for {
+			time.Sleep(time.Duration(time.Millisecond) * time.Duration(1000))
+			if stopWatchDog {
+				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
+				break
+			}
+			timeDataSeen := int(float64((time.Now().Sub(sendBegin)).Seconds()) * 1000)
+			if timeDataSeen > 8000 {
+				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(int(timeDataSeen))+"ms", logger.LogError)
+				cmd.Process.Kill()
+				break
+			}
 		}
 	}()
 
@@ -297,14 +316,16 @@ func FFMPEG(filename, title string) error {
 	cuefile := util.Basename(filename) + ".cue"
 	if config.Cfg.UpdateMetadata {
 		if title == "" {
+			//noinspection GoUnhandledErrorResult
 			go metadata.GetTagsFFMPEG(filename)
 			cuesheet.Load(cuefile)
 		} else {
+			//noinspection GoUnhandledErrorResult
 			go metadata.SendMetadata(title)
 		}
 	}
 
-	logger.TermLn("CTRL-C to stop", logger.LOG_INFO)
+	logger.TermLn("CTRL-C to stop", logger.LogInfo)
 
 	frames := 0
 	timeFileBegin := time.Now()
@@ -321,13 +342,13 @@ func FFMPEG(filename, title string) error {
 			lbuf, err = mpeg.GetFramesStdin(f, framesToRead)
 			if framesToRead == 1 {
 				if len(lbuf) < 4 {
-					logger.Log("Error reading data stream", logger.LOG_ERROR)
+					logger.Log("Error reading data stream", logger.LogError)
 					cleanUp(err)
 					break
 				}
 				sr = mpeg.GetSR(lbuf[0:4])
 				if sr == 0 {
-					logger.Log("Erroneous MPEG sample rate from data stream", logger.LOG_ERROR)
+					logger.Log("Erroneous MPEG sample rate from data stream", logger.LogError)
 					cleanUp(err)
 					break
 				}
@@ -340,13 +361,13 @@ func FFMPEG(filename, title string) error {
 			lbuf, err = aac.GetFramesStdin(f, framesToRead)
 			if framesToRead == 1 {
 				if len(lbuf) < 7 {
-					logger.Log("Error reading data stream", logger.LOG_ERROR)
+					logger.Log("Error reading data stream", logger.LogError)
 					cleanUp(err)
 					break
 				}
 				sr = aac.GetSR(lbuf[0:7])
 				if sr == 0 {
-					logger.Log("Erroneous AAC sample rate from data stream", logger.LOG_ERROR)
+					logger.Log("Erroneous AAC sample rate from data stream", logger.LogError)
 					cleanUp(err)
 					break
 				}
@@ -358,7 +379,7 @@ func FFMPEG(filename, title string) error {
 		}
 
 		if err != nil {
-			logger.Log("Error reading data stream", logger.LOG_ERROR)
+			logger.Log("Error reading data stream", logger.LogError)
 			cleanUp(err)
 			break
 		}
@@ -375,7 +396,7 @@ func FFMPEG(filename, title string) error {
 		}
 
 		if err := network.Send(sock, lbuf); err != nil {
-			logger.Log("Error sending data stream", logger.LOG_ERROR)
+			logger.Log("Error sending data stream", logger.LogError)
 			cleanUp(err)
 			break
 		}
@@ -383,9 +404,9 @@ func FFMPEG(filename, title string) error {
 		totalFramesSent = totalFramesSent + uint64(framesToRead)
 		frames = frames + framesToRead
 
-		timeElapsed := int(float64((time.Now().Sub(totalTimeBegin)).Seconds()) * 1000)
+		timeElapsed := int((time.Now().Sub(totalTimeBegin)).Seconds() * 1000)
 		timeSent := int(float64(totalFramesSent) * float64(spf) / float64(sr) * 1000)
-		timeFileElapsed := int(float64((time.Now().Sub(timeFileBegin)).Seconds()) * 1000)
+		timeFileElapsed := int((time.Now().Sub(timeFileBegin)).Seconds() * 1000)
 
 		bufferSent := 0
 		if timeSent > timeElapsed {
@@ -397,13 +418,13 @@ func FFMPEG(filename, title string) error {
 		}
 
 		// calculate the send lag
-		sendLag := int(float64((time.Now().Sub(sendBegin)).Seconds()) * 1000)
+		sendLag := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
 
 		if timeElapsed > 1500 {
 			logger.Term("Frames: "+strconv.Itoa(frames)+"/"+strconv.Itoa(int(totalFramesSent))+"  Time: "+
-				strconv.Itoa(int(timeElapsed/1000))+"/"+strconv.Itoa(int(timeSent/1000))+"s  Buffer: "+
-				strconv.Itoa(int(bufferSent))+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)),
-				logger.LOG_INFO)
+				strconv.Itoa(timeElapsed/1000)+"/"+strconv.Itoa(timeSent/1000)+"s  Buffer: "+
+				strconv.Itoa(bufferSent)+"ms  Frames/Bytes: "+strconv.Itoa(framesToRead)+"/"+strconv.Itoa(len(lbuf)),
+				logger.LogInfo)
 		}
 
 		// regulate sending rate
@@ -419,15 +440,15 @@ func FFMPEG(filename, title string) error {
 		}
 
 		if Abort {
-			err := errors.New("Aborted by user")
+			err := errors.New("aborted by user")
 			cleanUp(err)
 			break
 		}
 
-		time.Sleep(time.Duration(time.Millisecond) * time.Duration(timePause))
+		time.Sleep(time.Millisecond * time.Duration(timePause))
 	}
-	cmd.Wait()
-	logger.Log("ffmpeg is dead. hoy!", logger.LOG_DEBUG)
+	_ = cmd.Wait()
+	logger.Log("ffmpeg is dead. hoy!", logger.LogDebug)
 
 	//logger.Log(strconv.Itoa(cmd.ProcessState), logger.LOG_DEBUG)
 	return res

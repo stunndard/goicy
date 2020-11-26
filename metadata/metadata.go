@@ -2,13 +2,14 @@ package metadata
 
 import (
 	"encoding/base64"
+	"net/url"
+	"os/exec"
+	"strings"
+
 	"github.com/go-ini/ini"
 	"github.com/stunndard/goicy/config"
 	"github.com/stunndard/goicy/logger"
 	"github.com/stunndard/goicy/network"
-	"net/url"
-	"os/exec"
-	"strings"
 )
 
 func FormatMetadata(artist, title string) string {
@@ -25,7 +26,7 @@ func FormatMetadata(artist, title string) string {
 }
 
 func SendMetadata(metadata string) error {
-	logger.Log("Setting metadata: "+metadata, logger.LOG_INFO)
+	logger.Log("Setting metadata: "+metadata, logger.LogInfo)
 	sock, err := network.Connect(config.Cfg.Host, config.Cfg.Port)
 	if err != nil {
 		return err
@@ -56,7 +57,7 @@ func GetTagsFFMPEG(filename string) error {
 		"-",
 	}
 
-	logger.Log("Launching FFMPEG to read tags...", logger.LOG_DEBUG)
+	logger.Log("Launching FFMPEG to read tags...", logger.LogDebug)
 	cmd := exec.Command(cmdName, cmdArgs...)
 
 	out, err := cmd.Output()
@@ -64,12 +65,12 @@ func GetTagsFFMPEG(filename string) error {
 		return err
 	}
 
-	ini, err := ini.Load(out)
+	iniFile, err := ini.Load(out)
 	if err != nil {
 		return err
 	}
 
-	section, _ := ini.GetSection("")
+	section, _ := iniFile.GetSection("")
 	artist := section.Key("artist").Value()
 	if artist == "" {
 		artist = section.Key("ARTIST").Value()
@@ -80,8 +81,8 @@ func GetTagsFFMPEG(filename string) error {
 		title = section.Key("TITLE").Value()
 	}
 
-	logger.Log("Artist: "+artist, logger.LOG_DEBUG)
-	logger.Log("Title: "+title, logger.LOG_DEBUG)
+	logger.Log("Artist: "+artist, logger.LogDebug)
+	logger.Log("Title: "+title, logger.LogDebug)
 
 	// format metadata
 	metadata := FormatMetadata(artist, title)

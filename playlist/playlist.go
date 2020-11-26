@@ -27,14 +27,14 @@ func First() (string, string) {
 		if strings.HasPrefix(playlist[idx], "plugin://") {
 			err := plugin.Load(playlist[idx])
 			if err != nil {
-				logger.Log(err.Error(), logger.LOG_ERROR)
-				idx =+ 1
+				logger.Log(err.Error(), logger.LogError)
+				idx = + 1
 				return First()
 			}
 			file, metadata, err := plugin.First()
 			if err != nil {
-				logger.Log(err.Error(), logger.LOG_ERROR)
-				idx =+ 1
+				logger.Log(err.Error(), logger.LogError)
+				idx = + 1
 				return First()
 			}
 			pluginActive = file != "plugin://no.more"
@@ -56,7 +56,7 @@ func Next() (string, string) {
 	if pluginActive {
 		file, metadata, err := plugin.Next()
 		if err != nil {
-			logger.Log(err.Error(), logger.LOG_ERROR)
+			logger.Log(err.Error(), logger.LogError)
 			return "", ""
 		}
 		pluginActive = file != "plugin://no.more"
@@ -69,7 +69,10 @@ func Next() (string, string) {
 		idx = 0
 	}
 	np = playlist[idx]
-	Load()
+	if err := Load(); err != nil {
+		logger.Log(err.Error(), logger.LogError)
+		return "", ""
+	}
 	if idx > len(playlist)-1 {
 		idx = 0
 	}

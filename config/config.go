@@ -43,46 +43,46 @@ var Cfg Config
 
 func LoadConfig(filename string) error {
 
-	ini, err := ini.Load(filename)
+	iniFile, err := ini.Load(filename)
 	if err != nil {
 		return err
 	}
 
-	Cfg.ServerType = ini.Section("server").Key("server").Value()
-	Cfg.Host = ini.Section("server").Key("host").Value()
-	Cfg.Port, _ = ini.Section("server").Key("port").Int()
-	Cfg.Mount = ini.Section("server").Key("mount").Value()
-	Cfg.ConnAttempts, _ = ini.Section("server").Key("connectionattempts").Int()
-	Cfg.Password = ini.Section("server").Key("password").Value()
+	Cfg.ServerType = iniFile.Section("server").Key("server").Value()
+	Cfg.Host = iniFile.Section("server").Key("host").Value()
+	Cfg.Port, _ = iniFile.Section("server").Key("port").Int()
+	Cfg.Mount = iniFile.Section("server").Key("mount").Value()
+	Cfg.ConnAttempts, _ = iniFile.Section("server").Key("connectionattempts").Int()
+	Cfg.Password = iniFile.Section("server").Key("password").Value()
 
-	Cfg.StreamType = ini.Section("stream").Key("streamtype").Value()
-	Cfg.StreamFormat = ini.Section("stream").Key("format").Value()
-	Cfg.StreamReencode, _ = ini.Section("ffmpeg").Key("reencode").Bool()
-	Cfg.StreamBitrate, _ = ini.Section("ffmpeg").Key("bitrate").Int()
-	Cfg.StreamChannels, _ = ini.Section("ffmpeg").Key("channels").Int()
-	Cfg.StreamSamplerate, _ = ini.Section("ffmpeg").Key("samplerate").Int()
-	Cfg.StreamAACProfile = ini.Section("ffmpeg").Key("aacprofile").Value()
-	Cfg.FFMPEGPath = ini.Section("ffmpeg").Key("ffmpeg").Value()
+	Cfg.StreamType = iniFile.Section("stream").Key("streamtype").Value()
+	Cfg.StreamFormat = iniFile.Section("stream").Key("format").Value()
+	Cfg.StreamReencode, _ = iniFile.Section("ffmpeg").Key("reencode").Bool()
+	Cfg.StreamBitrate, _ = iniFile.Section("ffmpeg").Key("bitrate").Int()
+	Cfg.StreamChannels, _ = iniFile.Section("ffmpeg").Key("channels").Int()
+	Cfg.StreamSamplerate, _ = iniFile.Section("ffmpeg").Key("samplerate").Int()
+	Cfg.StreamAACProfile = iniFile.Section("ffmpeg").Key("aacprofile").Value()
+	Cfg.FFMPEGPath = iniFile.Section("ffmpeg").Key("ffmpeg").Value()
 
-	Cfg.StreamName = ini.Section("stream").Key("name").Value()
-	Cfg.StreamDescription = ini.Section("stream").Key("description").Value()
-	Cfg.StreamURL = ini.Section("stream").Key("url").Value()
-	Cfg.StreamGenre = ini.Section("stream").Key("genre").Value()
-	Cfg.StreamPublic, _ = ini.Section("stream").Key("public").Bool()
+	Cfg.StreamName = iniFile.Section("stream").Key("name").Value()
+	Cfg.StreamDescription = iniFile.Section("stream").Key("description").Value()
+	Cfg.StreamURL = iniFile.Section("stream").Key("url").Value()
+	Cfg.StreamGenre = iniFile.Section("stream").Key("genre").Value()
+	Cfg.StreamPublic, _ = iniFile.Section("stream").Key("public").Bool()
 
-	Cfg.PlaylistType = ini.Section("playlist").Key("playlisttype").Value()
-	Cfg.Playlist = ini.Section("playlist").Key("playlist").Value()
-	Cfg.PlayRandom, _ = ini.Section("playlist").Key("playrandom").Bool()
+	Cfg.PlaylistType = iniFile.Section("playlist").Key("playlisttype").Value()
+	Cfg.Playlist = iniFile.Section("playlist").Key("playlist").Value()
+	Cfg.PlayRandom, _ = iniFile.Section("playlist").Key("playrandom").Bool()
 
-	Cfg.BufferSize, _ = ini.Section("misc").Key("buffersize").Int()
+	Cfg.BufferSize, _ = iniFile.Section("misc").Key("buffersize").Int()
 	Cfg.BufferSize *= 1000
-	Cfg.UpdateMetadata, _ = ini.Section("misc").Key("updatemetadata").Bool()
-	Cfg.ScriptFile = ini.Section("misc").Key("script").Value()
-	Cfg.NpFile = ini.Section("misc").Key("npfile").Value()
-	Cfg.LogFile = ini.Section("misc").Key("logfile").Value()
-	Cfg.LogLevel, _ = ini.Section("misc").Key("loglevel").Int()
-	Cfg.IsDaemon, _ = ini.Section("misc").Key("daemon").Bool()
-	Cfg.PidFile = ini.Section("misc").Key("pidfile").Value()
+	Cfg.UpdateMetadata, _ = iniFile.Section("misc").Key("updatemetadata").Bool()
+	Cfg.ScriptFile = iniFile.Section("misc").Key("script").Value()
+	Cfg.NpFile = iniFile.Section("misc").Key("npfile").Value()
+	Cfg.LogFile = iniFile.Section("misc").Key("logfile").Value()
+	Cfg.LogLevel, _ = iniFile.Section("misc").Key("loglevel").Int()
+	Cfg.IsDaemon, _ = iniFile.Section("misc").Key("daemon").Bool()
+	Cfg.PidFile = iniFile.Section("misc").Key("pidfile").Value()
 
 	return nil
 }

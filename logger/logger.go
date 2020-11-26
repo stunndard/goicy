@@ -2,17 +2,18 @@ package logger
 
 import (
 	"fmt"
-	"github.com/stunndard/goicy/config"
-	"github.com/stunndard/goicy/util"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/stunndard/goicy/config"
+	"github.com/stunndard/goicy/util"
 )
 
 const (
-	LOG_ERROR = iota - 1
-	LOG_INFO
-	LOG_DEBUG
+	LogError = iota - 1
+	LogInfo
+	LogDebug
 )
 
 func File(s string, level int) {
@@ -34,11 +35,11 @@ func File(s string, level int) {
 	}
 	lvl := ""
 	switch level {
-	case LOG_ERROR:
+	case LogError:
 		lvl = "ERROR"
-	case LOG_INFO:
+	case LogInfo:
 		lvl = "INFO "
-	case LOG_DEBUG:
+	case LogDebug:
 		lvl = "DEBUG"
 	}
 	date := time.Now().Format("2006-01-02 15:04:05")
@@ -47,6 +48,7 @@ func File(s string, level int) {
 		fmt.Println(n)
 		fmt.Println(err)
 	}
+	//noinspection GoUnhandledErrorResult
 	f.Close()
 }
 
