@@ -2,12 +2,13 @@ package cuesheet
 
 import (
 	"bufio"
-	"github.com/stunndard/goicy/logger"
-	"github.com/stunndard/goicy/metadata"
 	"io"
 	"os"
 	"strconv"
 	"strings"
+
+	"github.com/stunndard/goicy/logger"
+	"github.com/stunndard/goicy/metadata"
 )
 
 type cueEntry struct {
@@ -20,8 +21,8 @@ var cueEntries []cueEntry
 var idx int
 var loaded bool
 
-func get_value(entry, key string) string {
-	s := string(entry[len(key)+1:])
+func getValue(entry, key string) string {
+	s := entry[len(key)+1:]
 	if string(s[0]) == "\"" {
 		s = s[1 : len(s)-1]
 	}
@@ -29,7 +30,7 @@ func get_value(entry, key string) string {
 	return s
 }
 
-func get_time(time string) uint32 {
+func getTime(time string) uint32 {
 	ttime := time[0 : len(time)-3] //Copy(time, 1, length(time) - 3);
 
 	s := ttime[0 : len(ttime)-3]
@@ -53,7 +54,7 @@ func isUpdate(time uint32) bool {
 	return res
 }
 
-func get_tags() (artist, title string) {
+func getTags() (artist, title string) {
 	if idx > 0 {
 		artist = cueEntries[idx-1].Artist
 		title = cueEntries[idx-1].Title
@@ -66,7 +67,8 @@ func Update(time uint32) {
 		return
 	}
 	if isUpdate(time) {
-		md := metadata.FormatMetadata(get_tags())
+		md := metadata.FormatMetadata(getTags())
+		//noinspection GoUnhandledErrorResult
 		go metadata.SendMetadata(md)
 	}
 }
@@ -83,6 +85,7 @@ func Load(cuefile string) bool {
 		//fmt.Println("error opening file ", err)
 		return false
 	}
+	//noinspection GoUnhandledErrorResult
 	defer f.Close()
 	r := bufio.NewReader(f)
 	for err != io.EOF {
@@ -94,13 +97,13 @@ func Load(cuefile string) bool {
 			entry = strings.Trim(entry, "\r\n ")
 			for (err != io.EOF) && (entry[0:5] != "TRACK") {
 				if entry[0:5] == "TITLE" {
-					cueEntries[idx].Title = get_value(entry, "TITLE")
+					cueEntries[idx].Title = getValue(entry, "TITLE")
 				}
 				if entry[0:9] == "PERFORMER" {
-					cueEntries[idx].Artist = get_value(entry, "PERFORMER")
+					cueEntries[idx].Artist = getValue(entry, "PERFORMER")
 				}
 				if entry[0:8] == "INDEX 01" {
-					cueEntries[idx].Time = get_time(get_value(entry, "INDEX 01"))
+					cueEntries[idx].Time = getTime(getValue(entry, "INDEX 01"))
 				}
 				if (err != nil) && (err == io.EOF) {
 					break
@@ -114,7 +117,7 @@ func Load(cuefile string) bool {
 	loaded = idx > 0
 	idx = 0
 	if loaded {
-		logger.Log("Loaded cuesheet: "+cuefile, logger.LOG_INFO)
+		logger.Log("Loaded cuesheet: "+cuefile, logger.LogInfo)
 	}
 	return loaded
 }

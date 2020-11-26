@@ -31,30 +31,30 @@ func main() {
 	go func() {
 		<-sigs
 		stream.Abort = true
-		logger.Log("Aborted by user/SIGTERM", logger.LOG_INFO)
+		logger.Log("Aborted by user/SIGTERM", logger.LogInfo)
 	}()
 
 	if len(os.Args) < 2 {
 		fmt.Println("Usage: goicy <inifile>")
 		return
 	}
-	inifile := string(os.Args[1])
+	inifile := os.Args[1]
 
 	//inifile := "d:\\work\\src\\Go\\src\\github.com\\stunndard\\goicy\\tests\\goicy.ini"
 
-	logger.TermLn("Loading config...", logger.LOG_DEBUG)
+	logger.TermLn("Loading config...", logger.LogDebug)
 	err := config.LoadConfig(inifile)
 	if err != nil {
-		logger.TermLn(err.Error(), logger.LOG_ERROR)
+		logger.TermLn(err.Error(), logger.LogError)
 		return
 	}
-	logger.File("---------------------------", logger.LOG_INFO)
-	logger.File("goicy v"+config.Version+" started", logger.LOG_INFO)
-	logger.Log("Loaded config file: "+inifile, logger.LOG_INFO)
+	logger.File("---------------------------", logger.LogInfo)
+	logger.File("goicy v"+config.Version+" started", logger.LogInfo)
+	logger.Log("Loaded config file: "+inifile, logger.LogInfo)
 
 	// daemonizing
 	if config.Cfg.IsDaemon && runtime.GOOS == "linux" {
-		logger.Log("Daemon mode, detaching from terminal...", logger.LOG_INFO)
+		logger.Log("Daemon mode, detaching from terminal...", logger.LogInfo)
 
 		cntxt := &daemon.Context{
 			PidFileName: config.Cfg.PidFile,
@@ -68,28 +68,29 @@ func main() {
 
 		d, err := cntxt.Reborn()
 		if err != nil {
-			logger.File(err.Error(), logger.LOG_ERROR)
+			logger.File(err.Error(), logger.LogError)
 			return
 		}
 		if d != nil {
-			logger.File("Parent process died", logger.LOG_INFO)
+			logger.File("Parent process died", logger.LogInfo)
 			return
 		}
+		//noinspection GoUnhandledErrorResult
 		defer cntxt.Release()
-		logger.Log("Daemonized successfully", logger.LOG_INFO)
+		logger.Log("Daemonized successfully", logger.LogInfo)
 	}
 
-	defer logger.Log("goicy exiting", logger.LOG_INFO)
+	defer logger.Log("goicy exiting", logger.LogInfo)
 
 	if err := playlist.Load(); err != nil {
-		logger.Log("Cannot load playlist file", logger.LOG_ERROR)
-		logger.Log(err.Error(), logger.LOG_ERROR)
+		logger.Log("Cannot load playlist file", logger.LogError)
+		logger.Log(err.Error(), logger.LogError)
 		return
 	}
 
 	retries := 0
 	filename, title := playlist.First()
-	logger.Log("Item to play: "+filename, logger.LOG_DEBUG)
+	logger.Log("Item to play: "+filename, logger.LogDebug)
 	for {
 		var err error
 		if config.Cfg.StreamType == "file" {
@@ -104,10 +105,10 @@ func main() {
 				break
 			}
 			retries++
-			logger.Log("Error streaming: "+err.Error(), logger.LOG_ERROR)
+			logger.Log("Error streaming: "+err.Error(), logger.LogError)
 
 			if retries == config.Cfg.ConnAttempts {
-				logger.Log("No more retries", logger.LOG_INFO)
+				logger.Log("No more retries", logger.LogInfo)
 				break
 			}
 			// if that was a file error
@@ -118,7 +119,7 @@ func main() {
 
 			}
 
-			logger.Log("Retrying in 10 sec...", logger.LOG_INFO)
+			logger.Log("Retrying in 10 sec...", logger.LogInfo)
 			for i := 0; i < 10; i++ {
 				time.Sleep(time.Second * 1)
 				if stream.Abort {

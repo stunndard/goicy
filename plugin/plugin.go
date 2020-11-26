@@ -38,7 +38,7 @@ func Load(pluginPath string) (err error) {
 	if len(pluginParams) < 2 {
 		return errors.New("invalid plugin params: " + pluginPath)
 	}
-	pluginFile := pluginParams[0] + ".exe"
+	pluginFile := "plugin_" + pluginParams[0] + ".exe"
 
 	client, err := pie.StartProviderCodec(jsonrpc.NewClientCodec, os.Stderr, pluginFile)
 	if err != nil {
@@ -52,7 +52,7 @@ func Load(pluginPath string) (err error) {
 		return errors.New("error calling Init: " + err.Error())
 	}
 
-	logger.Log(fmt.Sprintf("Response from plugin: %q", pluginInfo), logger.LOG_DEBUG)
+	logger.Log(fmt.Sprintf("Response from plugin: %q", pluginInfo), logger.LogDebug)
 	return err
 }
 
