@@ -289,7 +289,7 @@ func FFMPEG(filename, title string) error {
 		}
 	}()
 
-	logger.Log("Streaming file: "+filename+"...", logger.LogInfo)
+	logger.Log("Streaming file: "+filename+"...", logger.LOG_INFO)
 
 	cuefile := util.Basename(filename) + ".cue"
 	if config.Cfg.UpdateMetadata {
