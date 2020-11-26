@@ -363,7 +363,7 @@ func FFMPEG(filename, title string) error {
 		}
 
 		if len(lbuf) <= 0 {
-			logger.Log("STDIN from ffmpeg ended", logger.LogDebug)
+			logger.Log("STDIN from ffmpeg ended", logger.LOG_DEBUG)
 			stopWatchDog = true
 			break
 		}
