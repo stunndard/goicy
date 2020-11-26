@@ -160,9 +160,11 @@ func File(filename string) error {
 
 func FFMPEG(filename, title string) error {
 	var (
-		sock net.Conn
-		res  error
-		cmd  *exec.Cmd
+		sock         net.Conn
+		res          error
+		cmd          *exec.Cmd
+		sendBegin    time.Time
+		stopWatchDog bool
 	)
 
 	cleanUp := func(err error) {
@@ -170,6 +172,7 @@ func FFMPEG(filename, title string) error {
 		_ = cmd.Process.Kill()
 		network.Close(sock)
 		totalFramesSent = 0
+		stopWatchDog = true
 		res = err
 	}
 
@@ -268,6 +271,23 @@ func FFMPEG(filename, title string) error {
 			logger.Log("FFMPEG: "+in.Text(), logger.LogDebug)
 		}
 	}()
+	// watchdog to kill stalled ffmpeg
+	go func() {
+		//logger.Log("watchdog started", logger.LOG_DEBUG)
+		for {
+			time.Sleep(time.Duration(time.Millisecond) * time.Duration(1000))
+			if stopWatchDog {
+				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
+				break
+			}
+			timeDataSeen := int(float64((time.Now().Sub(sendBegin)).Seconds()) * 1000)
+			if timeDataSeen > 8000 {
+				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(int(timeDataSeen))+"ms", logger.LogError)
+				cmd.Process.Kill()
+				break
+			}
+		}
+	}()
 
 	logger.Log("Streaming file: "+filename+"...", logger.LogInfo)
 
@@ -344,6 +364,7 @@ func FFMPEG(filename, title string) error {
 
 		if len(lbuf) <= 0 {
 			logger.Log("STDIN from ffmpeg ended", logger.LogDebug)
+			stopWatchDog = true
 			break
 		}
 
