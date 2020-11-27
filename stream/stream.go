@@ -275,23 +275,6 @@ func FFMPEG(filename, title string) error {
 			logger.Log("FFMPEG: "+in.Text(), logger.LogDebug)
 		}
 	}()
-	// watchdog to kill stalled ffmpeg
-	go func() {
-		//logger.Log("watchdog started", logger.LOG_DEBUG)
-		for {
-			time.Sleep(time.Millisecond * time.Duration(1000))
-			if stopWatchDog {
-				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
-				break
-			}
-			timeDataSeen := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
-			if timeDataSeen > 8000 {
-				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(timeDataSeen)+"ms", logger.LogError)
-				cmd.Process.Kill()
-				break
-			}
-		}
-	}()
 
 	// watchdog to kill stalled ffmpeg
 	go func() {
@@ -305,7 +288,7 @@ func FFMPEG(filename, title string) error {
 			timeDataSeen := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
 			if timeDataSeen > 8000 {
 				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(timeDataSeen)+"ms", logger.LogError)
-				cmd.Process.Kill()
+				_ = cmd.Process.Kill()
 				break
 			}
 		}
