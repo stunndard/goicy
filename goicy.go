@@ -40,8 +40,6 @@ func main() {
 	}
 	inifile := os.Args[1]
 
-	//inifile := "d:\\work\\src\\Go\\src\\github.com\\stunndard\\goicy\\tests\\goicy.ini"
-
 	logger.TermLn("Loading config...", logger.LogDebug)
 	err := config.LoadConfig(inifile)
 	if err != nil {
