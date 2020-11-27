@@ -279,14 +279,14 @@ func FFMPEG(filename, title string) error {
 	go func() {
 		//logger.Log("watchdog started", logger.LOG_DEBUG)
 		for {
-			time.Sleep(time.Duration(time.Millisecond) * time.Duration(1000))
+			time.Sleep(time.Millisecond * time.Duration(1000))
 			if stopWatchDog {
 				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
 				break
 			}
-			timeDataSeen := int(float64((time.Now().Sub(sendBegin)).Seconds()) * 1000)
+			timeDataSeen := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
 			if timeDataSeen > 8000 {
-				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(int(timeDataSeen))+"ms", logger.LogError)
+				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(timeDataSeen)+"ms", logger.LogError)
 				cmd.Process.Kill()
 				break
 			}
@@ -297,21 +297,21 @@ func FFMPEG(filename, title string) error {
 	go func() {
 		//logger.Log("watchdog started", logger.LOG_DEBUG)
 		for {
-			time.Sleep(time.Duration(time.Millisecond) * time.Duration(1000))
+			time.Sleep(time.Millisecond * time.Duration(1000))
 			if stopWatchDog {
 				//logger.Log("watchdog stopped", logger.LOG_DEBUG)
 				break
 			}
-			timeDataSeen := int(float64((time.Now().Sub(sendBegin)).Seconds ()) * 1000)
+			timeDataSeen := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
 			if timeDataSeen > 8000 {
-				logger.Log("ffmpeg stalled, killing... " + strconv.Itoa(int(timeDataSeen)) + "ms", logger.LOG_ERROR)
+				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(timeDataSeen)+"ms", logger.LogError)
 				cmd.Process.Kill()
 				break
 			}
 		}
 	}()
 
-	logger.Log("Streaming file: "+filename+"...", logger.LOG_INFO)
+	logger.Log("Streaming file: "+filename+"...", logger.LogInfo)
 
 	cuefile := util.Basename(filename) + ".cue"
 	if config.Cfg.UpdateMetadata {
@@ -385,7 +385,7 @@ func FFMPEG(filename, title string) error {
 		}
 
 		if len(lbuf) <= 0 {
-			logger.Log("STDIN from ffmpeg ended", logger.LOG_DEBUG)
+			logger.Log("STDIN from ffmpeg ended", logger.LogDebug)
 			stopWatchDog = true
 			break
 		}
