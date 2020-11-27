@@ -33,6 +33,7 @@ type Config struct {
 	StreamGenre       string `ini:"genre"`
 	StreamPublic      bool   `ini:"public"`
 	IsDaemon          bool   `ini:"daemon"`
+	FFMPEGTimeout     int    `ini:"timeout"`
 	PidFile           string
 	FFMPEGPath        string
 }
@@ -63,6 +64,7 @@ func LoadConfig(filename string) error {
 	Cfg.StreamSamplerate, _ = iniFile.Section("ffmpeg").Key("samplerate").Int()
 	Cfg.StreamAACProfile = iniFile.Section("ffmpeg").Key("aacprofile").Value()
 	Cfg.FFMPEGPath = iniFile.Section("ffmpeg").Key("ffmpeg").Value()
+	Cfg.FFMPEGTimeout, _ = iniFile.Section("ffmpeg").Key("timeout").Int()
 
 	Cfg.StreamName = iniFile.Section("stream").Key("name").Value()
 	Cfg.StreamDescription = iniFile.Section("stream").Key("description").Value()

@@ -286,7 +286,7 @@ func FFMPEG(filename, title string) error {
 				break
 			}
 			timeDataSeen := int((time.Now().Sub(sendBegin)).Seconds() * 1000)
-			if timeDataSeen > 8000 {
+			if timeDataSeen > config.Cfg.FFMPEGTimeout*1000 {
 				logger.Log("ffmpeg stalled, killing... "+strconv.Itoa(timeDataSeen)+"ms", logger.LogError)
 				_ = cmd.Process.Kill()
 				break
