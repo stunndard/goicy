@@ -9,17 +9,18 @@ import (
 	"github.com/stunndard/goicy/util"
 )
 
-var srtable = [...]uint32{
-	44100, 48000, 32000, 0, // mpeg1
-	22050, 24000, 16000, 0, // mpeg2
-	11025, 12000, 8000, 0} // mpeg2.5
-
-var brtable = [...]uint32{
-	0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0,
-	0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0,
-	0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0,
-	0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0,
-	0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}
+var (
+	srtable = [...]int{
+		44100, 48000, 32000, 0, // mpeg1
+		22050, 24000, 16000, 0, // mpeg2
+		11025, 12000, 8000, 0} // mpeg2.5
+	brtable = [...]int{
+		0, 32, 64, 96, 128, 160, 192, 224, 256, 288, 320, 352, 384, 416, 448, 0,
+		0, 32, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 384, 0,
+		0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0,
+		0, 32, 48, 56, 64, 80, 96, 112, 128, 144, 160, 176, 192, 224, 256, 0,
+		0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0}
+)
 
 func isValidFrameHeader(header []byte) (int, bool) {
 
@@ -100,21 +101,21 @@ func GetSR(header []byte) int {
 
 	if mpegver == 3 {
 		// mpeg1
-		sr = int(srtable[srindex])
+		sr = srtable[srindex]
 	}
 	if mpegver == 2 {
 		// mpeg2
-		sr = int(srtable[srindex+4])
+		sr = srtable[srindex+4]
 	}
 	if mpegver == 0 {
 		// mpeg2.5
-		sr = int(srtable[srindex+8])
+		sr = srtable[srindex+8]
 	}
 	return sr
 }
 
 func getFrameSize(header []byte) int {
-	var sr, bitrate uint32
+	var sr, bitrate int
 	var res int
 
 	// get and check the mpeg version
@@ -172,22 +173,22 @@ func getFrameSize(header []byte) int {
 	switch mpegver {
 	case 3: // mpeg1
 		if layer == 3 { // layer1
-			res = (int(12*bitrate/sr) * 4) + (padding * 4)
+			res = (12 * bitrate / sr * 4) + (padding * 4)
 		}
 		if layer == 2 || layer == 1 {
 			// layer 2 & 3
-			res = int(144*bitrate/sr) + padding
+			res = 144*bitrate/sr + padding
 		}
 
 	case 2, 0: //mpeg2, mpeg2.5
 		if layer == 3 { // layer1
-			res = (int(12*bitrate/sr) * 4) + (padding * 4)
+			res = (12 * bitrate / sr * 4) + (padding * 4)
 		}
 		if layer == 2 { // layer2
-			res = int(144*bitrate/sr) + padding
+			res = 144*bitrate/sr + padding
 		}
 		if layer == 1 { // layer3
-			res = int(72*bitrate/sr) + padding
+			res = 72*bitrate/sr + padding
 		}
 	}
 	return res
@@ -457,15 +458,15 @@ func GetFileInfo(filename string, br *float64, spf, sr, frames, ch *int) error {
 		}
 		if mpegver == 3 {
 			// mpeg1
-			*sr = int(srtable[srindex])
+			*sr = srtable[srindex]
 		}
 		if mpegver == 2 {
 			// mpeg2
-			*sr = int(srtable[srindex+4])
+			*sr = srtable[srindex+4]
 		}
 		if mpegver == 0 {
 			// mpeg2.5
-			*sr = int(srtable[srindex+8])
+			*sr = srtable[srindex+8]
 		}
 
 		// get and check "channel configuration"

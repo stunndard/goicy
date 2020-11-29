@@ -19,9 +19,11 @@ import (
 	"github.com/stunndard/goicy/util"
 )
 
-var totalFramesSent uint64
-var totalTimeBegin time.Time
-var Abort bool
+var (
+	totalFramesSent uint64
+	totalTimeBegin  time.Time
+	Abort           bool
+)
 
 func File(filename string) error {
 	var (

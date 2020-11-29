@@ -17,9 +17,11 @@ type cueEntry struct {
 	Time   uint32 // in milliseconds
 }
 
-var cueEntries []cueEntry
-var idx int
-var loaded bool
+var (
+	cueEntries []cueEntry
+	idx        int
+	loaded     bool
+)
 
 func getValue(entry, key string) string {
 	s := entry[len(key)+1:]

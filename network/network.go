@@ -12,8 +12,10 @@ import (
 	"github.com/stunndard/goicy/logger"
 )
 
-var Connected = false
-var csock net.Conn
+var (
+	Connected = false
+	csock     net.Conn
+)
 
 func Connect(host string, port int) (net.Conn, error) {
 	h := host + ":" + strconv.Itoa(port)
