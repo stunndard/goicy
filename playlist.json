@@ -1,0 +1,19 @@
+{
+  "name": "channel1",
+  "tracks": [
+    {
+      "title": "After Life",
+      "artist": "Unsaved Changes",
+      "description": "cool track",
+      "url": "https://oz-tf.nyc3.digitaloceanspaces.com/audio/unsaved-changes.mp3"
+    },
+
+    {
+      "title": "Raiments",
+      "artist": "Ami Dang",
+      "description": "indian classical",
+      "url": "https://oz-tf.nyc3.digitaloceanspaces.com/audio/raiments.mp3"
+    }
+
+  ]
+}

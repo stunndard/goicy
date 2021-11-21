@@ -1,0 +1,13 @@
+version: "3"
+services:
+  redis:
+    image: redislabs/rejson:latest
+    restart: always
+    ports:
+      - 127.0.0.1:6379:6379
+  icecast:
+    container_name: icecast
+    image: vimagick/icecast
+    ports:
+      - "127.0.0.0:8000:8000"
+    restart: always
